@@ -33,7 +33,7 @@ public struct Config: Codable {
     var desiredLastRowHeight = 100.0
     // Could be override per room, in %/100
     var coverMargin = 0.05
-    
+
     struct Size: Codable {
         /// Length, from left to right
         var width = 0.0
@@ -51,12 +51,6 @@ public struct Config: Codable {
             case coverMargin = "cover_margin"
             case minLastRowHeight = "min_last_row_height"
             case desiredLastRowHeight = "desired_last_row_height"
-        }
-
-        enum FirstBoard: String, CaseIterable, Codable {
-            case full
-            case one_3 = "1/3"
-            case two_3 = "2/3"
         }
 
         var name: String = ""

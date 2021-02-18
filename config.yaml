@@ -22,12 +22,12 @@ rooms:
     cover_margin: 0.1
     first_board: "full" # "full", "1/3", "2/3"
 
-  - name: "big"
-    size:
-      height: 3800
-      width: 14010
-
-    first_board: "third" # "full", "1/3", "2/3"
+#  - name: "big"
+#    size:
+#      height: 3800
+#      width: 14010
+#
+#    first_board: "third" # "full", "1/3", "2/3"
     
     # height_clearance
     # min_last_row_height: 60.0
@@ -36,24 +36,24 @@ rooms:
 
 floor_choices:
   -
-    type: "1"
+    type: "Timberwise"
     board_size:
-      height: 190
-      width: 1900
+      height: 185
+      width: 2180
 
-    pack_area: 2.7
+    pack_area: 2.42
     # boards_per_pack optional, calculated as nearest integer using board area and pack area
     boards_per_pack: 6
 
-  -
-    type: "2"
-    board_size:
-      height: 190
-      width: 1900
-
-    pack_area: 2.7
-    # boards_per_pack optional, calculated as nearest integer using board area and pack area
-    boards_per_pack: 6
+#  -
+#    type: "2"
+#    board_size:
+#      height: 190
+#      width: 1900
+#
+#    pack_area: 2.7
+#    # boards_per_pack optional, calculated as nearest integer using board area and pack area
+#    boards_per_pack: 6
 
 # self.board_length = 1818.0
 # self.board_length = 2000.0

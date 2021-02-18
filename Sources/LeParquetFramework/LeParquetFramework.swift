@@ -7,22 +7,19 @@
 
 import Foundation
 
-let debug = true
+var debug = true
 
 public final class DeckParquetLayout: GenericRowLayout {
-
     public init(config: Config) {
         super.init(config)
+        debug = config.showCalculations
     }
 
     public var report: Report {
         self.doReport()
     }
 
-    
     func doReport() -> Report {
         return Report()
     }
-    
 }
-
