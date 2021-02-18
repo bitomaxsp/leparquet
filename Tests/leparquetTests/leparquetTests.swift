@@ -1,5 +1,5 @@
-import XCTest
 @testable import leparquet
+import XCTest
 
 final class leparquetTests: XCTestCase {
     func testExample() {
