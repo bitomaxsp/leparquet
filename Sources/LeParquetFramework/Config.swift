@@ -22,29 +22,31 @@ public struct Config: Codable {
     var showCalculations: Bool = false
 
     /// One side value
+    // Could be override per room
     var heightClearance = 0.0
     /// One side value
+    // Could be override per room
     var lengthClearance = 0.0
-
     // Could be override per room
     var minLastRowHeight = 60.0
     // Could be override per room
     var desiredLastRowHeight = 100.0
     // Could be override per room, in %/100
     var coverMargin = 0.05
-
+    
     struct Size: Codable {
-        var height = 0.0
+        /// Length, from left to right
         var width = 0.0
-        var cgsize: CGSize {
-            CGSize(width: self.width, height: self.height)
-        }
+        /// Count from top to bottom
+        var height = 0.0
     }
 
     struct RoomConfig: Codable {
         enum CodingKeys: String, CodingKey {
             case name
             case size
+            case heightClearance = "height_clearance"
+            case lengthClearance = "length_clearance"
             case firstBoard = "first_board"
             case coverMargin = "cover_margin"
             case minLastRowHeight = "min_last_row_height"
@@ -62,6 +64,9 @@ public struct Config: Codable {
         // TODO: add enum decode
         //        var first_board: FirstBoard = .one_3 // 1, 1/3, 2/3
         var firstBoard = ""
+
+        var heightClearance: Double?
+        var lengthClearance: Double?
         var coverMargin: Double?
         var minLastRowHeight: Double?
         var desiredLastRowHeight: Double?
@@ -82,7 +87,7 @@ public struct Config: Codable {
         // One of the following must be set
         // If both set, verification is done using all values
         var packArea: Double?
-        var boardsPerPack: Double?
+        var boardsPerPack: Int?
     }
 
     var floorChoices = [FloorConfig]()

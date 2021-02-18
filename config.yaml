@@ -28,7 +28,8 @@ rooms:
       width: 14010
 
     first_board: "third" # "full", "1/3", "2/3"
-
+    
+    # height_clearance
     # min_last_row_height: 60.0
     # desired_last_row_height: 100.0
     # cover_margin: 0.05
