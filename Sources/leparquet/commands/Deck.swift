@@ -19,16 +19,17 @@ extension LeParquet {
         var configPath: String
 
         mutating func run() throws {
-            print("Loading config \(configPath)")
+            print("Loading config \(self.configPath)")
 
             let decoder = YAMLDecoder()
 
             let data = try Data(contentsOf: URL(fileURLWithPath: configPath))
-            //            userInfo: [CodingUserInfoKey(rawValue: "showCalculations")!: Config.self
             let config = try decoder.decode(Config.self, from: data)
-            print(config.floorChoices)
 
-            let layout = DeckParquetLayout()
+            let layout = DeckParquetLayout(config: config)
+            layout.calculate()
+            let report = layout.report
+            report.print()
         }
     }
 }

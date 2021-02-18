@@ -1,10 +1,10 @@
 import Dispatch
 #if canImport(Darwin)
-    import Darwin
+import Darwin
 #elseif canImport(Glibc)
-    import Glibc
+import Glibc
 #else
-    #error("Unsupported platform")
+#error("Unsupported platform")
 #endif
 
 // @main

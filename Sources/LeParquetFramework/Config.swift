@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Config: Codable {
+public struct Config: Codable {
     enum CodingKeys: String, CodingKey {
         case showCalculations = "show_calculations"
         case heightClearance = "height_clearance"
@@ -37,7 +37,7 @@ struct Config: Codable {
         var height = 0.0
         var width = 0.0
         var cgsize: CGSize {
-            CGSize(width: width, height: height)
+            CGSize(width: self.width, height: self.height)
         }
     }
 

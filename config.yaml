@@ -53,3 +53,24 @@ floor_choices:
     pack_area: 2.7
     # boards_per_pack optional, calculated as nearest integer using board area and pack area
     boards_per_pack: 6
+
+# self.board_length = 1818.0
+# self.board_length = 2000.0
+# self.board_length = 2080.0
+# self.board_length = 2180.0
+# self.board_height = 185.0
+# self.pack_area_m2 = 2.42
+
+# self.board_length = 2200.0
+# self.board_height = 207
+# self.pack_area_m2 = 3.18
+
+# 151XCDEKFZKW195
+# self.board_length = 1900.
+# self.board_height = 190.
+# self.pack_area_m2 = 2.17
+
+# 151L8AEK09KW220
+#self.board_length = 2266.
+#self.board_height = 187.
+#self.pack_area_m2 = 2.5
