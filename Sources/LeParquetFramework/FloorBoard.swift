@@ -30,7 +30,7 @@ class ReusableBoard: Rect, Comparable {
     private var h: Double
     private var trash: Bool
 
-    convenience init() {
+    fileprivate convenience init() {
         self.init(width: 0, height: 0, reuse: false)
     }
 

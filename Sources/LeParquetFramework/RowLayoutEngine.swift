@@ -122,7 +122,7 @@ public class RowLayoutEngine {
         let start = self.input.firstBoard.lengthAsDouble()
 
         var row_count = 0
-        var cutLength = start
+        var cutLength: Double = start
         // ReusableBoard(width: start, height: self.input.material.board.size.height)
 
         while row_count < self.report.total_rows {
@@ -139,9 +139,6 @@ public class RowLayoutEngine {
                 // Use new first board and save the rest
                 self.use_whole_board_on_the_left_side(cutLength)
             }
-
-            // Use whole board if we in the middle
-//            cutLength = self.normalizedWholeStep
 
             while covered < normalizedRowWidth {
                 cutLength = min(cutLength, min(self.normalizedWholeStep, Double(normalizedRowWidth - covered)))
@@ -170,8 +167,7 @@ public class RowLayoutEngine {
                     break
                 }
 
-//                // Use whole board if we in the middle
-//                // TODO: MOVE out of cycle upward
+                // Use whole board if we in the middle
                 cutLength = self.normalizedWholeStep
             }
             // Update step before new row
@@ -243,11 +239,6 @@ public class RowLayoutEngine {
         }
     }
 
-//    enum Side {
-//        case left
-//        case right
-//    }
-
     private func use_from_left_stash(_ requiredLength: Double) -> RightCut? {
         return self.useFrom(&self.report.reusable_left, requiredLength)
     }
@@ -289,7 +280,6 @@ public class RowLayoutEngine {
         return nil
     }
 
-//    private func collect_trash(_ trash: Double) {
     private func collect_trash(_ trash: ReusableBoard) {
         // return rounded trash
         if !trash.reusable {
@@ -298,6 +288,7 @@ public class RowLayoutEngine {
                 print("Collect trash \(trash.width.round(6))")
             }
         } else {
+            precondition(trash.reusable, "Trash is usable")
             if debug {
                 print("Trash is usable: \(trash)")
             }

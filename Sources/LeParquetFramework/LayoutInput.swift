@@ -38,7 +38,7 @@ struct LayoutInput {
 
         func lengthAsDouble() -> Double {
             switch self {
-            case .full: return 0.0
+            case .full: return 1.0
             case .one_3: return 1.0 / 3.0
             case .two_3: return 2.0 / 3.0
             }
