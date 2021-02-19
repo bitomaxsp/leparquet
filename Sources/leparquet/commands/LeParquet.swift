@@ -9,9 +9,6 @@ import ArgumentParser
 import Foundation
 
 struct LeParquet: ParsableCommand {
-    @Flag(name: .shortAndLong, help: "Output verbose calculations")
-    var verbose = false
-
     static var configuration = CommandConfiguration(
         commandName: "leparquet",
         abstract: "A tool to calculate parquet layout and material quantities.",

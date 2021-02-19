@@ -15,8 +15,23 @@ extension LeParquet {
         static let configuration = CommandConfiguration(abstract: "Calculate deck layout",
                                                         shouldDisplay: true)
 
+//        enum Kind: String, ExpressibleByArgument {
+//            case mean, median, mode
+//        }
+//
+//        @Option(help: "The kind of average to provide.")
+//        var kind: Kind = .mean
+
+        // TODO: Fix optional bool
+        @Flag(name: .shortAndLong, help: "Output verbose calculations. Overrides config value")
+        var verbose: Int
+
         @Argument(help: "YAML configuration file with rooms and materials")
         var configPath: String
+
+        mutating func validate() throws {
+            print("func validate \(self.verbose)")
+        }
 
         mutating func run() throws {
             print("Loading config \(self.configPath)")

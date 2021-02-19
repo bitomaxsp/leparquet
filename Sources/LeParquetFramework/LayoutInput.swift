@@ -8,7 +8,7 @@
 import Foundation
 
 // TODO: rename
-struct LayoutData {
+struct LayoutInput {
     typealias Size = Config.Size
 
     struct Material {
