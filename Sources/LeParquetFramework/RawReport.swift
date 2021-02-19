@@ -8,7 +8,10 @@
 import Foundation
 
 class RawReport {
-    typealias Stash = [Double]
+    // TODO: rename
+    typealias Stash = [ReusableBoard]
+    typealias StashOfLefts = [LeftCut]
+    typealias StashOfRights = [RightCut]
 
     init(_ input: LayoutInput) {
         self.first_row_height = Double(input.material.board.size.height)
@@ -17,10 +20,12 @@ class RawReport {
     var first_row_height: Double
     var last_row_height = 0.0
 
-    var rows = [[Double]]()
+    var rows = [Stash]()
 
-    var reusable_left = Stash()
-    var reusable_right = Stash()
+    // NOTE: Reusable right cut can only be used on left side, and vise versa
+    var reusable_left = StashOfRights()
+    var reusable_right = StashOfLefts()
+    // This is pure trash, middle cuts mostly
     var unusable_rest = Stash()
 
     var used_boards = 0
@@ -30,6 +35,10 @@ class RawReport {
     var total_rows = 0
 
     // MARK: Implementation
+
+    func newRow() {
+        self.rows.append(Stash())
+    }
 
     func collectRests() {
         self.unusable_rest.append(contentsOf: self.reusable_right)
