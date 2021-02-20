@@ -62,10 +62,18 @@ class RawReport {
         self.unusable_rest.sort()
     }
 
+    func printAll() {
+        print("Unusable normalized rests: \(self.unusable_rest.map { $0.width.round(4) }) [norm to board length]")
+        self.printRows()
+    }
+
     func printRows() {
+        print("\nLayout [nomalized]:")
+
         for r in self.rows {
             print(r.map { $0.width.round(4) })
         }
+        print("\n")
     }
 }
 

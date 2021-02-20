@@ -33,16 +33,9 @@ public class RowLayoutEngine {
         print("Norm row width: \(normalizedRowWidth.round(4)), Effective covering lenth in each row: \(normalizedRowWidth * board_width)mm")
 
         self.normalizedLayoutCalculation(normalizedRowWidth)
-
         self.report.collectRests()
 
-        print("Unusable normalized rests: \(self.report.unusable_rest.map { $0.width.round(4) }) [norm to board length]")
-
-        print("\nLayout [nomalized]:")
-
-        self.report.printRows()
-
-        print("\n")
+        self.report.printAll()
 
         return self.report
     }
@@ -180,7 +173,6 @@ public class RowLayoutEngine {
         }
     }
 
-    // TODO: Rename to nextRowFirstBoardLength()
     private func nextRowFirstLength(_ startLength: Double, _ rowCount: Int) -> Double {
         let step = Double(1, 3)
         let r = rowCount % 3
