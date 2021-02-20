@@ -117,13 +117,12 @@ public class RowLayoutEngine {
     }
 
     private func normalizedLayoutCalculation(_ normalizedRowWidth: Double) {
-        let start = self.input.firstBoard.lengthAsDouble()
+        let startLength = self.input.firstBoard.lengthAsDouble()
 
-        var row_count = 0
-        var cutLength: Double = start
+        var cutLength: Double = startLength
         // ReusableBoard(width: start, height: self.input.material.board.size.height)
 
-        while row_count < self.report.total_rows {
+        for row_count in 0 ..< self.report.total_rows {
             if debug {
                 print("Row ======================== \(row_count)")
             }
@@ -157,9 +156,8 @@ public class RowLayoutEngine {
                 }
 
                 if cutLength == self.normalizedWholeStep {
-                    self.report.addBoard(self.report.newBoard(width: cutLength))
-                    rowCovered += cutLength
-                
+                    board = self.report.newBoard(width: cutLength)
+
                 } else if cutLength < self.normalizedWholeStep {
                     board = self.useBoardFromRightStash(cutLength)
                     // Right reused from stash if we have it with required length
@@ -167,18 +165,14 @@ public class RowLayoutEngine {
                         // Or new one and save the rest
                         board = self.useWholeBoardOnTheRightSide(cutLength)
                     }
-
-                    precondition(board != nil, "Board must be valid here")
-                    self.report.addBoard(board!)
-                    break
                 }
+                precondition(board != nil, "Board must be valid here")
 
-                // Use whole board if we in the middle
-                cutLength = self.normalizedWholeStep
+                rowCovered += cutLength
+                self.report.addBoard(board!)
             }
             // Update step before new row
-            cutLength = self.next_deck_step(start, row_count)
-            row_count += 1
+            cutLength = self.nextRowFirstLength(startLength, row_count)
         }
 
         if debug {
@@ -187,11 +181,11 @@ public class RowLayoutEngine {
     }
 
     // TODO: Rename to nextRowFirstBoardLength()
-    private func next_deck_step(_ start: Double, _ rowCount: Int) -> Double {
+    private func nextRowFirstLength(_ startLength: Double, _ rowCount: Int) -> Double {
         let step = Double(1, 3)
         let r = rowCount % 3
 
-        var nexts = start + step + step * Double(r)
+        var nexts = startLength + step + step * Double(r)
         if nexts > self.normalizedWholeStep {
             nexts -= self.normalizedWholeStep
         }
@@ -230,9 +224,7 @@ public class RowLayoutEngine {
 
         // Take new board
         let board = self.report.newBoard(width: self.normalizedWholeStep)
-
         // Determine rest from lest to right side
-//        if cutLength == Double(1, 3) || cutLength == Double(2, 3) {
         if cutLength < self.normalizedWholeStep {
             let (left, right) = board.cutAlongWidth(atDistance: cutLength, from: .right)
 
