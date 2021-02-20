@@ -63,6 +63,8 @@ final class LeftCut: ReusableBoard {
     override func cutAlongWidth(atDistance: Double, from fromEdge: VerticalEdge) -> (LeftCut, RightCut) {
         // Left is good
         // Right is trash
+//        print(self, "cutAlongWidth \(atDistance) \(fromEdge)")
+
         let newWidth = self.width - atDistance
         switch fromEdge {
         case .left:
@@ -77,6 +79,8 @@ final class RightCut: ReusableBoard {
     override func cutAlongWidth(atDistance: Double, from fromEdge: VerticalEdge) -> (LeftCut, RightCut) {
         // Left is trash
         // Right is good
+//        print(self, "cutAlongWidth \(atDistance) \(fromEdge)")
+
         let newWidth = self.width - atDistance
         switch fromEdge {
         case .left:
@@ -99,6 +103,8 @@ final class FloorBoard: ReusableBoard {
     override func cutAlongWidth(atDistance: Double, from fromEdge: VerticalEdge) -> (LeftCut, RightCut) {
         // Left is good
         // Right is good
+//        print(self, "cutAlongWidth \(atDistance) \(fromEdge)")
+
         let newWidth = self.width - atDistance
         switch fromEdge {
         case .left:

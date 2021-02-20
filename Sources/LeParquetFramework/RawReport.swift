@@ -15,12 +15,14 @@ class RawReport {
 
     init(_ input: LayoutInput) {
         self.first_row_height = Double(input.material.board.size.height)
+        self.boardHeight = input.material.board.size.height
     }
 
+    let boardHeight: Double
     var first_row_height: Double
     var last_row_height = 0.0
 
-    var rows = [Stash]()
+    private var rows = [Stash]()
 
     // NOTE: Reusable right cut can only be used on left side, and vise versa
     var reusable_left = StashOfRights()
@@ -28,7 +30,7 @@ class RawReport {
     // This is pure trash, middle cuts mostly
     var unusable_rest = Stash()
 
-    var used_boards = 0
+    private var used_boards = 0
 
     var unused_height_on_first_row: Double = 0.0
     var unused_height_on_last_row: Double = 0.0
@@ -40,12 +42,30 @@ class RawReport {
         self.rows.append(Stash())
     }
 
+    func addBoard(_ board: ReusableBoard) {
+        self.rows[self.rows.count - 1].append(board)
+    }
+
+    // TODO: use 1.0 width board
+    func newBoard(width: Double) -> FloorBoard {
+        defer {
+            self.used_boards += 1
+        }
+        return FloorBoard(width: width, height: self.boardHeight)
+    }
+
     func collectRests() {
         self.unusable_rest.append(contentsOf: self.reusable_right)
         self.unusable_rest.append(contentsOf: self.reusable_left)
         self.reusable_left.removeAll()
         self.reusable_right.removeAll()
         self.unusable_rest.sort()
+    }
+
+    func printRows() {
+        for r in self.rows {
+            print(r.map { $0.width.round(4) })
+        }
     }
 }
 

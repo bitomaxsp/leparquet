@@ -40,9 +40,7 @@ public class RowLayoutEngine {
 
         print("\nLayout [nomalized]:")
 
-        for r in self.report.rows {
-            print(r.map { $0.width.round(4) })
-        }
+        self.report.printRows()
 
         print("\n")
 
@@ -130,40 +128,50 @@ public class RowLayoutEngine {
                 print("Row ======================== \(row_count)")
             }
 
-//            self.report.rows.append(Stash())
             self.report.newRow()
-            var covered = 0.0
+            var rowCovered = 0.0
 
             // First board used from LEFT stash
-            if self.use_from_left_stash(cutLength) == nil {
+            var board: ReusableBoard? = self.use_from_left_stash(cutLength)
+            if board == nil {
                 // Use new first board and save the rest
-                self.use_whole_board_on_the_left_side(cutLength)
+                board = self.useWholeBoardOnTheLeftSide(cutLength)
             }
 
-            while covered < normalizedRowWidth {
-                cutLength = min(cutLength, min(self.normalizedWholeStep, Double(normalizedRowWidth - covered)))
+            precondition(board != nil, "Board must be valid here")
+            self.report.addBoard(board!)
+            rowCovered += board!.width
+
+            if debug {
+                print("Row:\(row_count) Step: \(cutLength.round(4))")
+            }
+
+            // Use whole board if we in the middle
+            cutLength = self.normalizedWholeStep
+
+            while rowCovered < normalizedRowWidth {
+                if rowCovered + cutLength >= normalizedRowWidth {
+                    cutLength = min(cutLength, min(self.normalizedWholeStep, Double(normalizedRowWidth - rowCovered)))
+                }
 
                 if debug {
                     print("Row:\(row_count) Step: \(cutLength.round(4))")
                 }
 
-//                self.add(boardCut, forRow: row_count)
-                let used_board = FloorBoard(width: cutLength, height: self.input.material.board.size.height)
-                self.report.rows[row_count].append(used_board)
+                if cutLength == 1.0 {
+                    self.report.addBoard(self.report.newBoard(width: cutLength))
+                    rowCovered += cutLength
 
-                covered += cutLength
-
-                if cutLength == 1 {
-                    // TODO: take_whole_board
-                    self.report.used_boards += 1
-                }
-
-                if covered >= normalizedRowWidth {
+                } else if rowCovered + cutLength >= normalizedRowWidth {
+                    board = self.use_from_right_stash(cutLength)
                     // Right reused from stash if we have it with required length
-                    if self.use_from_right_stash(cutLength) == nil {
+                    if board == nil {
                         // Or new one and save the rest
-                        self.use_whole_board_on_the_right_side(cutLength)
+                        board = self.useWholeBoardOnTheRightSide(cutLength)
                     }
+
+                    precondition(board != nil, "Board must be valid here")
+                    self.report.addBoard(board!)
                     break
                 }
 
@@ -193,50 +201,52 @@ public class RowLayoutEngine {
         return nexts
     }
 
-    private func use_whole_board_on_the_right_side(_ usedWidth: Double) {
-        let board = FloorBoard(width: self.normalizedWholeStep, height: self.input.material.board.size.height)
-        self.report.used_boards += 1
+    // return used cut
+    private func useWholeBoardOnTheRightSide(_ cutLength: Double) -> ReusableBoard {
+        precondition(cutLength > 0.0, "Cut must be greater than 0")
 
-        let (left, right) = board.cutAlongWidth(atDistance: usedWidth, from: .left)
+        let board = self.report.newBoard(width: self.normalizedWholeStep)
+        if cutLength < 1.0 {
+            let (left, right) = board.cutAlongWidth(atDistance: cutLength, from: .left)
 
-        // Whole board was used as last one on the right
-        let rest_to_left_side = self.normalizedWholeStep - usedWidth
+            precondition(left.width == cutLength, "left.width must be cutLength")
 
-        // Save usable rest from right which can be used on left side
-
-        assert(rest_to_left_side != 0.0)
-        precondition(right.width == rest_to_left_side, "left.width must greater that 0")
-
-        // Collect usable only if it grater than smallest usedWidth for the last which 1/3 for the deck layout
-        if rest_to_left_side >= Double(1, 3) {
-            if debug {
-                print("Save reusable left: \(right.width.round(4))")
+            // Collect usable only if it grater than smallest cutLength for the last which 1/3 for the deck layout
+            if right.width >= Double(1, 3) { // TODO: min row step
+                if debug {
+                    print("Save reusable \(right) for the left side: \(right.width.round(4))")
+                }
+                // Save usable rest from right which can be used on left side
+                self.report.reusable_left.append(right)
+            } else {
+                self.collect_trash(right)
             }
-            self.report.reusable_left.append(right)
-        } else {
-            self.collect_trash(left)
+            return left
         }
+        return board
     }
 
-    private func use_whole_board_on_the_left_side(_ step: Double) {
-//        precondition(step < self.normalizedWholeStep, "First step in row")
+    // return used cut
+    private func useWholeBoardOnTheLeftSide(_ cutLength: Double) -> ReusableBoard {
+        precondition(cutLength > 0.0, "Cut must be greater than 0")
+
+        // Take new board
+        let board = self.report.newBoard(width: self.normalizedWholeStep)
 
         // Determine rest from lest to right side
-        if step == Double(1, 3) || step == Double(2, 3) {
-            let board = FloorBoard(width: self.normalizedWholeStep, height: self.input.material.board.size.height)
-            self.report.used_boards += 1
+//        if cutLength == Double(1, 3) || cutLength == Double(2, 3) {
+        if cutLength < 1.0 {
+            let (left, right) = board.cutAlongWidth(atDistance: cutLength, from: .right)
 
-            let (left, right) = board.cutAlongWidth(atDistance: step, from: .right)
-
-            // TODO: right is useable
-
-            precondition(self.normalizedWholeStep - step == left.width)
+            precondition(right.width == cutLength, "right.width must be cutLength")
 
             self.report.reusable_right.append(left)
             if debug {
-                print("Save reusable right: \(left.width.round(4))")
+                print("Save reusable \(left) for the right side: \(left.width.round(4))")
             }
+            return right
         }
+        return board
     }
 
     private func use_from_left_stash(_ requiredLength: Double) -> RightCut? {
@@ -282,16 +292,9 @@ public class RowLayoutEngine {
 
     private func collect_trash(_ trash: ReusableBoard) {
         // return rounded trash
-        if !trash.reusable {
-            self.report.unusable_rest.append(trash)
-            if debug {
-                print("Collect trash \(trash.width.round(6))")
-            }
-        } else {
-            precondition(trash.reusable, "Trash is usable")
-            if debug {
-                print("Trash is usable: \(trash)")
-            }
+        self.report.unusable_rest.append(trash)
+        if debug {
+            print("Collect trash \(trash.width.round(6)), reuse: \(trash.reusable)")
         }
     }
 }
