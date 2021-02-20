@@ -132,9 +132,9 @@ public class RowLayoutEngine {
             var rowCovered = 0.0
 
             // First board used from LEFT stash
-            var board: ReusableBoard? = self.use_from_left_stash(cutLength)
+            var board: ReusableBoard? = self.useBoradFromLeftStash(cutLength)
             if board == nil {
-                // Use new first board and save the rest
+                // Use new first board and save the rest if stash is empty
                 board = self.useWholeBoardOnTheLeftSide(cutLength)
             }
 
@@ -150,20 +150,18 @@ public class RowLayoutEngine {
             cutLength = self.normalizedWholeStep
 
             while rowCovered < normalizedRowWidth {
-                if rowCovered + cutLength >= normalizedRowWidth {
-                    cutLength = min(cutLength, min(self.normalizedWholeStep, Double(normalizedRowWidth - rowCovered)))
-                }
+                cutLength = min(self.normalizedWholeStep, Double(normalizedRowWidth - rowCovered))
 
                 if debug {
                     print("Row:\(row_count) Step: \(cutLength.round(4))")
                 }
 
-                if cutLength == 1.0 {
+                if cutLength == self.normalizedWholeStep {
                     self.report.addBoard(self.report.newBoard(width: cutLength))
                     rowCovered += cutLength
-
-                } else if rowCovered + cutLength >= normalizedRowWidth {
-                    board = self.use_from_right_stash(cutLength)
+                
+                } else if cutLength < self.normalizedWholeStep {
+                    board = self.useBoardFromRightStash(cutLength)
                     // Right reused from stash if we have it with required length
                     if board == nil {
                         // Or new one and save the rest
@@ -206,7 +204,7 @@ public class RowLayoutEngine {
         precondition(cutLength > 0.0, "Cut must be greater than 0")
 
         let board = self.report.newBoard(width: self.normalizedWholeStep)
-        if cutLength < 1.0 {
+        if cutLength < self.normalizedWholeStep {
             let (left, right) = board.cutAlongWidth(atDistance: cutLength, from: .left)
 
             precondition(left.width == cutLength, "left.width must be cutLength")
@@ -219,7 +217,7 @@ public class RowLayoutEngine {
                 // Save usable rest from right which can be used on left side
                 self.report.reusable_left.append(right)
             } else {
-                self.collect_trash(right)
+                self.collect(trash: right)
             }
             return left
         }
@@ -235,7 +233,7 @@ public class RowLayoutEngine {
 
         // Determine rest from lest to right side
 //        if cutLength == Double(1, 3) || cutLength == Double(2, 3) {
-        if cutLength < 1.0 {
+        if cutLength < self.normalizedWholeStep {
             let (left, right) = board.cutAlongWidth(atDistance: cutLength, from: .right)
 
             precondition(right.width == cutLength, "right.width must be cutLength")
@@ -249,11 +247,11 @@ public class RowLayoutEngine {
         return board
     }
 
-    private func use_from_left_stash(_ requiredLength: Double) -> RightCut? {
+    private func useBoradFromLeftStash(_ requiredLength: Double) -> RightCut? {
         return self.useFrom(&self.report.reusable_left, requiredLength)
     }
 
-    private func use_from_right_stash(_ requiredLength: Double) -> LeftCut? {
+    private func useBoardFromRightStash(_ requiredLength: Double) -> LeftCut? {
         return self.useFrom(&self.report.reusable_right, requiredLength)
     }
 
@@ -278,10 +276,10 @@ public class RowLayoutEngine {
                 let (left, right) = board.cutAlongWidth(atDistance: requiredLength, from: edge)
 
                 if T.self == LeftCut.self {
-                    self.collect_trash(right)
+                    self.collect(trash: right)
                     return left as? T
                 } else {
-                    self.collect_trash(right)
+                    self.collect(trash: left)
                     return right as? T
                 }
             }
@@ -290,7 +288,7 @@ public class RowLayoutEngine {
         return nil
     }
 
-    private func collect_trash(_ trash: ReusableBoard) {
+    private func collect(trash: ReusableBoard) {
         // return rounded trash
         self.report.unusable_rest.append(trash)
         if debug {
