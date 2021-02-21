@@ -42,7 +42,7 @@ floor_choices:
     type: "Timberwise"
     board_size:
       height: 185
-      width: 2180
+      width: 1890 #2180
 
     pack_area: 2.42
     # boards_per_pack optional, calculated as nearest integer using board area and pack area

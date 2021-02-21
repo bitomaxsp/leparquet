@@ -64,7 +64,7 @@ public class RowLayoutEngine {
         }
 
         // whole room covered using whole boards in hieght
-        if self.report.last_row_height == 0.0 {
+        if self.report.last_row_height.isZero {
             self.report.last_row_height = board_height
         }
 
@@ -117,7 +117,7 @@ public class RowLayoutEngine {
 
         for row_count in 0 ..< self.report.total_rows {
             if debug {
-                print("Row ======================== \(row_count)")
+                print("Row -------------------------------- \(row_count)")
             }
 
             self.report.newRow()
@@ -169,7 +169,7 @@ public class RowLayoutEngine {
         }
 
         if debug {
-            print("============================ DONE")
+            print("-------------------------------- DONE")
         }
     }
 
@@ -193,7 +193,7 @@ public class RowLayoutEngine {
         if cutLength < self.normalizedWholeStep {
             let (left, right) = board.cutAlongWidth(atDistance: cutLength, from: .left)
 
-            precondition(left.width == cutLength, "left.width must be cutLength")
+            precondition(left.width.eq(cutLength), "left.width must be cutLength")
 
             // Collect usable only if it grater than smallest cutLength for the last which 1/3 for the deck layout
             if right.width >= Double(1, 3) { // TODO: min row step
@@ -220,7 +220,7 @@ public class RowLayoutEngine {
         if cutLength < self.normalizedWholeStep {
             let (left, right) = board.cutAlongWidth(atDistance: cutLength, from: .right)
 
-            precondition(right.width == cutLength, "right.width must be cutLength")
+            precondition(right.width.eq(cutLength), "right.width must be cutLength")
 
             self.report.reusable_right.append(left)
             if debug {
@@ -246,17 +246,24 @@ public class RowLayoutEngine {
                 print("Checking stash of reusable \(T.self) part: \(stash.map { $0.width.round(4) })")
             }
 
-            if let idx = stash.firstIndex(where: { $0.width > requiredLength }) {
+            // Use nextDown to avoid rounding errors
+            if let idx = stash.firstIndex(where: { requiredLength >= $0.width.nextDown }) {
                 let board = stash.remove(at: idx)
 
-                precondition(board.width - requiredLength >= 0.0)
+                precondition(requiredLength - board.width.nextDown >= 0.0)
 
                 if debug {
                     print("Found reusable \(T.self) part: \(board.width.round(4)), using \(requiredLength.round(4)) of it")
                 }
 
+                // Use own eq to avoid rounding errors
+                if board.width.eq(requiredLength) {
+                    return board
+                }
+
                 let edge: VerticalEdge = T.self == LeftCut.self ? .left : .right
 
+                // TODO: account cut width ~ 1-2mm
                 let (left, right) = board.cutAlongWidth(atDistance: requiredLength, from: edge)
 
                 if T.self == LeftCut.self {
@@ -292,5 +299,10 @@ extension Double {
 
     func round(_ signs: Int) -> String {
         return String(format: "%.\(signs)g", self)
+    }
+
+    // Use own eq to avoid rounding errors
+    func eq(_ other: Double) -> Bool {
+        return fabs(self - other) < Double.ulpOfOne
     }
 }
