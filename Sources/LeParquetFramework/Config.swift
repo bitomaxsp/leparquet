@@ -17,6 +17,7 @@ public struct Config: Codable {
         case coverMargin = "cover_margin"
         case rooms
         case floorChoices = "floor_choices"
+        case toolCutWidth = "tool_cut_width"
     }
 
     var showCalculations: Bool = false
@@ -33,6 +34,8 @@ public struct Config: Codable {
     var desiredLastRowHeight = 100.0
     // Could be override per room, in %/100
     var coverMargin = 0.05
+    // Tool cut width in mm
+    var toolCutWidth = 2.0
 
     struct Size: Codable {
         /// Length, from left to right

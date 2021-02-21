@@ -21,8 +21,8 @@ protocol Rect {
     var width: Double { get }
     var height: Double { get }
     var area: Double { get }
-    func cutAlongWidth(atDistance: Double, from fromEdge: VerticalEdge) -> (LeftCut, RightCut)
-    func cutAlongHeight(atDistance: Double, from fromEdge: HorizontalEdge) -> (TopCut, BottomCut)
+    func cutAlongWidth(atDistance: Double, from fromEdge: VerticalEdge, cutWidth: Double) -> (LeftCut, RightCut)
+    func cutAlongHeight(atDistance: Double, from fromEdge: HorizontalEdge, cutWidth: Double) -> (TopCut, BottomCut)
 }
 
 class ReusableBoard: Rect, Comparable {
@@ -53,19 +53,20 @@ class ReusableBoard: Rect, Comparable {
         return RightCut(width: width, height: self.height, reuse: reuse)
     }
 
-    func cutAlongWidth(atDistance: Double, from fromEdge: VerticalEdge) -> (LeftCut, RightCut) {
+    func cutAlongWidth(atDistance: Double, from fromEdge: VerticalEdge, cutWidth: Double) -> (LeftCut, RightCut) {
         assert(false, "IMPLEMENT IN SUBCLASS")
         return (LeftCut(), RightCut())
     }
 }
 
 final class LeftCut: ReusableBoard {
-    override func cutAlongWidth(atDistance: Double, from fromEdge: VerticalEdge) -> (LeftCut, RightCut) {
+    override func cutAlongWidth(atDistance: Double, from fromEdge: VerticalEdge, cutWidth: Double) -> (LeftCut, RightCut) {
         // Left is good
         // Right is trash
 //        print(self, "cutAlongWidth \(atDistance) \(fromEdge)")
 
-        let newWidth = self.width - atDistance
+        let newWidth = self.width - atDistance - cutWidth
+        precondition(newWidth > 0.0, "newWidth must be > 0")
         switch fromEdge {
         case .left:
             return (createLeft(width: atDistance, reuse: true), createRight(width: newWidth, reuse: false))
@@ -76,12 +77,13 @@ final class LeftCut: ReusableBoard {
 }
 
 final class RightCut: ReusableBoard {
-    override func cutAlongWidth(atDistance: Double, from fromEdge: VerticalEdge) -> (LeftCut, RightCut) {
+    override func cutAlongWidth(atDistance: Double, from fromEdge: VerticalEdge, cutWidth: Double) -> (LeftCut, RightCut) {
         // Left is trash
         // Right is good
 //        print(self, "cutAlongWidth \(atDistance) \(fromEdge)")
 
-        let newWidth = self.width - atDistance
+        let newWidth = self.width - atDistance - cutWidth
+        precondition(newWidth > 0.0, "newWidth must be > 0")
         switch fromEdge {
         case .left:
             return (createLeft(width: atDistance, reuse: false), createRight(width: newWidth, reuse: true))
@@ -100,12 +102,13 @@ final class FloorBoard: ReusableBoard {
         super.init(width: width, height: height, reuse: true)
     }
 
-    override func cutAlongWidth(atDistance: Double, from fromEdge: VerticalEdge) -> (LeftCut, RightCut) {
+    override func cutAlongWidth(atDistance: Double, from fromEdge: VerticalEdge, cutWidth: Double) -> (LeftCut, RightCut) {
         // Left is good
         // Right is good
 //        print(self, "cutAlongWidth \(atDistance) \(fromEdge)")
 
-        let newWidth = self.width - atDistance
+        let newWidth = self.width - atDistance - cutWidth
+        precondition(newWidth > 0.0, "newWidth must be > 0")
         switch fromEdge {
         case .left:
             return (createLeft(width: atDistance, reuse: true), createRight(width: newWidth, reuse: true))
@@ -116,7 +119,7 @@ final class FloorBoard: ReusableBoard {
 }
 
 extension Rect {
-    func cutAlongHeight(atDistance: Double, from fromEdge: HorizontalEdge) -> (TopCut, BottomCut) {
+    func cutAlongHeight(atDistance: Double, from fromEdge: HorizontalEdge, cutWidth: Double) -> (TopCut, BottomCut) {
         assert(false, "NOT IMPLEMENTED")
         return (TopCut(), BottomCut())
     }

@@ -191,7 +191,7 @@ public class RowLayoutEngine {
 
         let board = self.report.newBoard(width: self.normalizedWholeStep)
         if cutLength < self.normalizedWholeStep {
-            let (left, right) = board.cutAlongWidth(atDistance: cutLength, from: .left)
+            let (left, right) = board.cutAlongWidth(atDistance: cutLength, from: .left, cutWidth: self.input.normalizedToolCutWidth)
 
             precondition(left.width.eq(cutLength), "left.width must be cutLength")
 
@@ -218,7 +218,7 @@ public class RowLayoutEngine {
         let board = self.report.newBoard(width: self.normalizedWholeStep)
         // Determine rest from lest to right side
         if cutLength < self.normalizedWholeStep {
-            let (left, right) = board.cutAlongWidth(atDistance: cutLength, from: .right)
+            let (left, right) = board.cutAlongWidth(atDistance: cutLength, from: .right, cutWidth: self.input.normalizedToolCutWidth)
 
             precondition(right.width.eq(cutLength), "right.width must be cutLength")
 
@@ -247,10 +247,15 @@ public class RowLayoutEngine {
             }
 
             // Use nextDown to avoid rounding errors
-            if let idx = stash.firstIndex(where: { requiredLength >= $0.width.nextDown }) {
+            if let idx = stash.firstIndex(where: {
+                // When we search a cut we need to account for tool cut width
+                let diff = $0.width - (requiredLength + self.input.normalizedToolCutWidth)
+                // If the are close to each other or too far
+                return $0.width.eq(requiredLength) || diff > Double.ulpOfOne
+            }) {
                 let board = stash.remove(at: idx)
 
-                precondition(requiredLength - board.width.nextDown >= 0.0)
+                precondition(board.width - (requiredLength + self.input.normalizedToolCutWidth) > Double.ulpOfOne || board.width.eq(requiredLength))
 
                 if debug {
                     print("Found reusable \(T.self) part: \(board.width.round(4)), using \(requiredLength.round(4)) of it")
@@ -264,7 +269,7 @@ public class RowLayoutEngine {
                 let edge: VerticalEdge = T.self == LeftCut.self ? .left : .right
 
                 // TODO: account cut width ~ 1-2mm
-                let (left, right) = board.cutAlongWidth(atDistance: requiredLength, from: edge)
+                let (left, right) = board.cutAlongWidth(atDistance: requiredLength, from: edge, cutWidth: self.input.normalizedToolCutWidth)
 
                 if T.self == LeftCut.self {
                     self.collect(trash: right)

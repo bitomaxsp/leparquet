@@ -54,6 +54,7 @@ struct LayoutInput {
     let desiredLastRowHeight: Double
     let coverMaterialMargin: Double
     let material: Material
+    let normalizedToolCutWidth: Double
 
     // DO NO USE IN COMPUTATIONS
     let calc_covered_area: Double
@@ -74,6 +75,8 @@ struct LayoutInput {
         precondition(margin >= 0.0 && margin <= 0.5)
         self.coverMaterialMargin = margin
         self.material = Material(floor)
+
+        self.normalizedToolCutWidth = config.toolCutWidth / self.material.board.size.width
 
         // DO NO USE IN COMPUTATION
         self.calc_covered_area = Double(self.actualRoomSize.width * self.actualRoomSize.height * 1e-6)
