@@ -9,12 +9,17 @@ import Foundation
 
 public class RowLayoutEngine {
     typealias Stash = RawReport.Stash
+    typealias StashOfLefts = [LeftCut]
+    typealias StashOfRights = [RightCut]
 
     // ###################################
 
     let input: LayoutInput
     let report: RawReport
     let normalizedWholeStep = 1.0
+    // NOTE: Reusable right cut can only be used on left side, and vise versa
+    private var reusableLeft = StashOfRights()
+    private var reusableRight = StashOfLefts()
 
     init(_ input: LayoutInput) {
         self.input = input
@@ -33,7 +38,10 @@ public class RowLayoutEngine {
         print("Norm row width: \(normalizedRowWidth.round(4)), Effective covering lenth in each row: \(normalizedRowWidth * board_width)mm")
 
         self.normalizedLayoutCalculation(normalizedRowWidth)
-        self.report.collectRests()
+        self.report.collectRests(from: self.reusableRight)
+        self.report.collectRests(from: self.reusableLeft)
+        self.reusableLeft.removeAll()
+        self.reusableRight.removeAll()
 
         self.report.printAll()
 
@@ -124,7 +132,7 @@ public class RowLayoutEngine {
             var rowCovered = 0.0
 
             // First board used from LEFT stash
-            var board: ReusableBoard? = self.useBoradFromLeftStash(cutLength)
+            var board: ReusableBoard? = self.useBoardFromLeftStash(cutLength)
             if board == nil {
                 // Use new first board and save the rest if stash is empty
                 board = self.useWholeBoardOnTheLeftSide(cutLength)
@@ -201,7 +209,7 @@ public class RowLayoutEngine {
                     print("Save reusable \(right) for the left side: \(right.width.round(4))")
                 }
                 // Save usable rest from right which can be used on left side
-                self.report.reusable_left.append(right)
+                self.stash(right: right)
             } else {
                 self.collect(trash: right)
             }
@@ -222,7 +230,7 @@ public class RowLayoutEngine {
 
             precondition(right.width.eq(cutLength), "right.width must be cutLength")
 
-            self.report.reusable_right.append(left)
+            self.stash(left: left)
             if debug {
                 print("Save reusable \(left) for the right side: \(left.width.round(4))")
             }
@@ -231,12 +239,22 @@ public class RowLayoutEngine {
         return board
     }
 
-    private func useBoradFromLeftStash(_ requiredLength: Double) -> RightCut? {
-        return self.useFrom(&self.report.reusable_left, requiredLength)
+    private func stash(right: RightCut) {
+        self.reusableLeft.append(right)
     }
 
+    private func stash(left: LeftCut) {
+        self.reusableRight.append(left)
+    }
+
+    // Get cut (of right part) from left stash for left side
+    private func useBoardFromLeftStash(_ requiredLength: Double) -> RightCut? {
+        return self.useFrom(&self.reusableLeft, requiredLength)
+    }
+
+    // Get cut (of left) from right stash for right side
     private func useBoardFromRightStash(_ requiredLength: Double) -> LeftCut? {
-        return self.useFrom(&self.report.reusable_right, requiredLength)
+        return self.useFrom(&self.reusableRight, requiredLength)
     }
 
     private func useFrom<T>(_ stash: inout [T], _ requiredLength: Double) -> T? where T: ReusableBoard {
@@ -285,8 +303,7 @@ public class RowLayoutEngine {
     }
 
     private func collect(trash: ReusableBoard) {
-        // return rounded trash
-        self.report.unusable_rest.append(trash)
+        self.report.stash(trash: trash)
         if debug {
             print("Collect trash \(trash.width.round(6)), reuse: \(trash.reusable)")
         }

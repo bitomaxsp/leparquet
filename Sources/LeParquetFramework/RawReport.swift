@@ -10,8 +10,6 @@ import Foundation
 class RawReport {
     // TODO: rename
     typealias Stash = [ReusableBoard]
-    typealias StashOfLefts = [LeftCut]
-    typealias StashOfRights = [RightCut]
 
     init(_ input: LayoutInput) {
         self.input = input
@@ -20,9 +18,7 @@ class RawReport {
 
     let input: LayoutInput
     var boardHeight: Double { return self.input.material.board.size.height }
-
     var boardArea: Double { return self.input.material.board.area }
-
     var roomSize: Config.Size { return self.input.effectiveRoomSize }
 
     var first_row_height: Double
@@ -30,11 +26,8 @@ class RawReport {
 
     private var rows = [Stash]()
 
-    // NOTE: Reusable right cut can only be used on left side, and vise versa
-    var reusable_left = StashOfRights()
-    var reusable_right = StashOfLefts()
     // This is pure trash, middle cuts mostly
-    var unusable_rest = Stash()
+    private var trashCuts = Stash()
 
     private var used_boards = 0
 
@@ -61,21 +54,23 @@ class RawReport {
         return FloorBoard(width: width, height: self.boardHeight)
     }
 
-    func collectRests() {
-        self.unusable_rest.append(contentsOf: self.reusable_right)
-        self.unusable_rest.append(contentsOf: self.reusable_left)
-        self.reusable_left.removeAll()
-        self.reusable_right.removeAll()
-        self.unusable_rest.sort()
+    func stash(trash: ReusableBoard) {
+        precondition(trash.width > 0.0, "Zero width trash. Weird!")
+        self.trashCuts.append(trash)
+    }
+
+    func collectRests<T>(from: [T]) where T: ReusableBoard {
+        self.trashCuts.append(contentsOf: from)
+        self.trashCuts.sort()
     }
 
     func printAll() {
-        print("Unusable normalized rests: \(self.unusable_rest.map { $0.width.round(4) }) [norm to board length]")
+        print("Unusable normalized rests: \(self.trashCuts.map { $0.width.round(4) }) [norm to board length]")
         self.printRows()
 
-        print("Unusable rests: \(self.unusable_rest.map { ($0.width * self.input.material.board.size.width).round(4) }) mm")
+        print("Unusable rests: \(self.trashCuts.map { ($0.width * self.input.material.board.size.width).round(4) }) mm")
 
-        let rest_width_sum = self.unusable_rest.reduce(0.0) { (next, b) in
+        let rest_width_sum = self.trashCuts.reduce(0.0) { (next, b) in
             return next + b.width
         }
 
