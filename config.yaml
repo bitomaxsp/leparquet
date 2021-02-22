@@ -1,5 +1,5 @@
 ---
-show_calculations: false    
+show_calculations: false
 
 # One side value
 height_clearance: 10
@@ -13,21 +13,21 @@ desired_last_row_height: 100.0
 # Could be override per room, in %/100
 cover_margin: 0.05
 # Optinal: use it if you want to limit calculation to only selected floor type
-# Otherwise leparquet will use all floors 
-# floor_index: 0
+# Otherwise leparquet will use all floors
+floor_index: 0
 # Tool cut width in mm
 tool_cut_width: 2.0
 # Type of laylout: 1/2 - brick, 1/3 - deck, rests
 #layout_runout: 1/3
 
 rooms:
-  - name: "small"
-    size:
-      height: 2110
-      width: 3800
+  # - name: "small"
+  #   size:
+  #     height: 2110
+  #     width: 3800
 
-    cover_margin: 0.1
-    first_board: "1/3" # "full", "1/3", "2/3"
+  #   cover_margin: 0.1
+  #   first_board: "1/3" # "full", "1/3", "2/3"
 
   - name: "big"
     size:
@@ -35,7 +35,7 @@ rooms:
       width: 14010
 
     first_board: "1/3" # "full", "1/3", "2/3"
-    
+
     # height_clearance
     # min_last_row_height: 60.0
     # desired_last_row_height: 100.0
@@ -43,7 +43,16 @@ rooms:
 
 floor_choices:
   -
-    type: "Timberwise"
+     type: "Kärs 151L8AEK09KW220"
+     board_size:
+       height: 187
+       width: 2200
+
+     pack_area: 2.54
+     boards_per_pack: 6
+
+  -
+    type: "Timberwise-185 Ek"
     board_size:
       height: 185
       width: 2180
@@ -53,32 +62,29 @@ floor_choices:
     boards_per_pack: 6
 
   -
-    type: "2"
+    type: "7876069T #1"
     board_size:
-      height: 190
-      width: 1900
+      height: 162
+      width: 2000
 
-    pack_area: 2.7
-    # boards_per_pack optional, calculated as nearest integer using board area and pack area
+    pack_area: 1.94
     boards_per_pack: 6
 
-# self.board_length = 1818.0
-# self.board_length = 2000.0
-# self.board_length = 2080.0
-# self.board_length = 2180.0
-# self.board_height = 185.0
-# self.pack_area_m2 = 2.42
+  -
+    type: "7876069T #2"
+    board_size:
+      height: 162
+      width: 2200
 
-# self.board_length = 2200.0
-# self.board_height = 207
-# self.pack_area_m2 = 3.18
+    pack_area: 2.14
+    boards_per_pack: 6
 
-# 151XCDEKFZKW195
-# self.board_length = 1900.
-# self.board_height = 190.
-# self.pack_area_m2 = 2.17
+  -
+     type: "Kärs 151L8AEK1DKW240"
+     board_size:
+       height: 187
+       width: 2420
 
-# 151L8AEK09KW220
-#self.board_length = 2266.
-#self.board_height = 187.
-#self.pack_area_m2 = 2.5
+     pack_area: 2.72
+     boards_per_pack: 6
+

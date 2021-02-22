@@ -47,7 +47,7 @@ public class RowLayoutEngine {
         self.reusableRight.removeAll()
 
         if self.debug {
-            self.report.printAll()
+            self.report.printVerbose()
         }
 
         return self.report

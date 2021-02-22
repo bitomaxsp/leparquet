@@ -29,7 +29,7 @@ class RawReport {
     // This is pure trash, middle cuts mostly
     private var trashCuts = Stash()
 
-    private var used_boards = 0
+    private var boardsUsed = 0
 
     var unused_height_on_first_row: Double = 0.0
     var unused_height_on_last_row: Double = 0.0
@@ -49,7 +49,7 @@ class RawReport {
     // TODO: use 1.0 width board
     func newBoard(width: Double) -> FloorBoard {
         defer {
-            self.used_boards += 1
+            self.boardsUsed += 1
         }
         return FloorBoard(width: width, height: self.boardHeight)
     }
@@ -64,9 +64,10 @@ class RawReport {
         self.trashCuts.sort()
     }
 
-    func printAll() {
+    func printVerbose() {
         print("Unusable normalized rests: \(self.trashCuts.map { $0.width.round(4) }) [norm to board length]")
         self.printRows()
+        self.printRows(self.input.material.board.size.width)
 
         print("Unusable rests: \(self.trashCuts.map { ($0.width * self.input.material.board.size.width).round(4) }) mm")
 
@@ -82,16 +83,33 @@ class RawReport {
 
         print("Unusable top/bottom trash area: \(side_cut_trash_area_m2) m^2")
         print("Total trash area: \(total_trash.round(4)) m^2")
-        print("Used boards: \(self.used_boards)")
+        print("Used boards: \(self.boardsUsed)")
 
-        let total_board_area = Double(self.used_boards) * self.boardArea
+        let totalBoardsArea = Double(self.boardsUsed) * self.boardArea
 
-        // TODO: self.input.material.pack.area
-//        let packs_required = ceil(total_board_area / self.input.material.pack.area)
-//        print("Unsed boards left: {packs_required * int(round(self.pack_area_m2/self.one_board_area_m2, 0)) - self.used_boards}")
-//        print("Packs required: {packs_required}")
-        print("Total buy area as [boards * board area]: \(total_board_area) m^2")
-        print("Total buy area - total trash area: \((total_board_area - total_trash).round(4)) m^2")
+        if let packArea = self.input.material.pack.area {
+            print("----------------------------------------------------")
+            print("** Calculate using pack area: \(packArea)")
+            let packsRequired = ceil(totalBoardsArea / packArea)
+            let estimatedBoardCount = packArea / self.boardArea
+            // FIXME: error
+            print("** Unsed boards left: \((packsRequired * estimatedBoardCount - Double(self.boardsUsed)).rounded())")
+            print("** Packs required: \(packsRequired.rounded())")
+            print("** Estimated board/pack: \(estimatedBoardCount.round(1))")
+        }
+        print("----------------------------------------------------")
+        if let boardsPerPack = self.input.material.pack.boardsCount {
+            print("++ Calculate using boards per pack: \(boardsPerPack)")
+            let packsRequired = self.boardsUsed / boardsPerPack + (self.boardsUsed % boardsPerPack == 0 ? 0 : 1)
+            let rest = self.boardsUsed % boardsPerPack
+            print("++ Unsed boards left: \(boardsPerPack - rest == 0 ? boardsPerPack : rest)")
+            print("++ Packs required: \(packsRequired)")
+            print("++ Estimated pack area: \(Double(boardsPerPack) * self.boardArea)")
+            print("----------------------------------------------------")
+        }
+
+        print("Total buy area as [boards * board area]: \(totalBoardsArea) m^2")
+        print("Total buy area - total trash area: \((totalBoardsArea - total_trash).round(4)) m^2")
 
         print("\n----------- THEROY DATA: -----------")
 
@@ -101,15 +119,15 @@ class RawReport {
         print("Calculated boards (using margin), float: \((self.input.calc_covered_area_with_margin / self.boardArea).round(4))")
         print("Calculated boards (using margin), int: \(self.boardNumWithMargin)")
 
-        print("Total trash calc: \((total_board_area - self.input.calc_covered_area).round(4)) m^2")
+        print("Total trash calc: \((totalBoardsArea - self.input.calc_covered_area).round(4)) m^2")
 //        print(self.summary)
     }
 
-    func printRows() {
+    func printRows(_ mul: Double = 1.0) {
         print("\nLayout [nomalized]:")
 
         for r in self.rows {
-            print(r.map { $0.width.round(4) })
+            print(r.map { ($0.width * mul).round(4) })
         }
         print("\n")
     }

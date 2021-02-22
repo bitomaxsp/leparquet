@@ -18,6 +18,7 @@ public struct Config: Codable {
         case rooms
         case floorChoices = "floor_choices"
         case toolCutWidth = "tool_cut_width"
+        case floorIndex = "floor_index"
     }
 
     var showCalculations: Bool = false
@@ -36,6 +37,8 @@ public struct Config: Codable {
     var coverMargin = 0.05
     // Tool cut width in mm
     var toolCutWidth = 2.0
+    // Seleced floor index for particular calculation
+    var floorIndex: Int?
 
     struct Size: Codable {
         /// Length, from left to right

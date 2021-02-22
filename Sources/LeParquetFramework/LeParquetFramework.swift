@@ -26,12 +26,22 @@ public final class LayoutProducer {
     public func calculate() -> Report {
         let report = Report()
 
-        for choice in self.config.floorChoices {
+        if let idx = self.config.floorIndex {
+            let choice = self.config.floorChoices[idx]
             for room in self.config.rooms {
                 let input = LayoutInput(self.config, choice, room)
                 let engine = RowLayoutEngine(input, debug: self.debug)
                 let rawReport = engine.layout()
                 report.add(rawReport, forRoom: room, withChoice: choice)
+            }
+        } else {
+            for choice in self.config.floorChoices {
+                for room in self.config.rooms {
+                    let input = LayoutInput(self.config, choice, room)
+                    let engine = RowLayoutEngine(input, debug: self.debug)
+                    let rawReport = engine.layout()
+                    report.add(rawReport, forRoom: room, withChoice: choice)
+                }
             }
         }
 
