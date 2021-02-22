@@ -64,7 +64,30 @@ class RawReport {
         self.trashCuts.sort()
     }
 
-    func printVerbose() {
+    func printHeight() {
+        print("Total rows: \(self.total_rows)")
+        print("First row height: \(self.first_row_height)mm")
+        print("Middle height: \(self.boardHeight)mm")
+        print("Last row height: \(self.last_row_height)mm")
+
+        var total_height = self.first_row_height + self.boardHeight * Double(self.total_rows) + self.last_row_height
+        var N = 0.0
+        if self.first_row_height > 0.0 {
+            total_height -= self.boardHeight
+            N += 1
+        }
+        if self.last_row_height > 0.0 {
+            total_height -= self.boardHeight
+            N += 1
+        }
+
+        print("Total height: \(self.first_row_height) + \(self.boardHeight)*\(Double(self.total_rows) - N) + \(self.last_row_height) = \(total_height)mm")
+        print("(Remember, you need to add both side clearance)")
+        print("Unused height from first row: \(self.unused_height_on_first_row)mm")
+        print("Unused height from last row: \(self.unused_height_on_last_row)mm")
+    }
+
+    func printWidth() {
         print("Unusable normalized rests: \(self.trashCuts.map { $0.width.round(4) }) [norm to board length]")
         self.printRows()
         self.printRows(self.input.material.board.size.width)
@@ -93,7 +116,7 @@ class RawReport {
             let packsRequired = ceil(totalBoardsArea / packArea)
             let estimatedBoardCount = packArea / self.boardArea
             // FIXME: error
-            print("** Unsed boards left: \((packsRequired * estimatedBoardCount - Double(self.boardsUsed)).rounded())")
+            print("** Unused boards left: \((packsRequired * estimatedBoardCount - Double(self.boardsUsed)))")
             print("** Packs required: \(packsRequired.rounded())")
             print("** Estimated board/pack: \(estimatedBoardCount.round(1))")
         }
@@ -111,15 +134,15 @@ class RawReport {
         print("Total buy area as [boards * board area]: \(totalBoardsArea) m^2")
         print("Total buy area - total trash area: \((totalBoardsArea - total_trash).round(4)) m^2")
 
-        print("\n----------- THEROY DATA: -----------")
+        print("\n----------- THEORY DATA -----------")
 
         print("Calculated area: \(self.input.calc_covered_area.round(4)) m^2")
         print("Calculated area + margin: \(self.input.calc_covered_area_with_margin.round(4)) m^2")
         self.boardNumWithMargin = Int(ceil(self.input.calc_covered_area_with_margin / self.boardArea))
         print("Calculated boards (using margin), float: \((self.input.calc_covered_area_with_margin / self.boardArea).round(4))")
         print("Calculated boards (using margin), int: \(self.boardNumWithMargin)")
-
         print("Total trash calc: \((totalBoardsArea - self.input.calc_covered_area).round(4)) m^2")
+
 //        print(self.summary)
     }
 

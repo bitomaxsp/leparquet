@@ -47,7 +47,7 @@ public class RowLayoutEngine {
         self.reusableRight.removeAll()
 
         if self.debug {
-            self.report.printVerbose()
+            self.report.printWidth()
         }
 
         return self.report
@@ -96,28 +96,7 @@ public class RowLayoutEngine {
         self.report.unused_height_on_last_row = board_height - self.report.last_row_height
 
         if self.debug {
-            print("Total rows: \(total_rows)")
-            print("First row height: \(self.report.first_row_height)mm")
-            print("Middle height: \(board_height)mm")
-            print("Last row height: \(self.report.last_row_height)mm")
-        }
-
-        var total_height = self.report.first_row_height + board_height * total_rows + self.report.last_row_height
-
-        var N = 0.0
-        if self.report.first_row_height > 0.0 {
-            total_height -= board_height
-            N += 1
-        }
-        if self.report.last_row_height > 0.0 {
-            total_height -= board_height
-            N += 1
-        }
-        if self.debug {
-            print("Total height: \(self.report.first_row_height) + \(board_height)*\(total_rows - N) + \(self.report.last_row_height) = \(total_height)mm")
-            print("(Remember, you need to add both side clearance)")
-            print("Unused height from first row: \(self.report.unused_height_on_first_row)mm")
-            print("Unused height from last row: \(self.report.unused_height_on_last_row)mm")
+            self.report.printHeight()
         }
     }
 
