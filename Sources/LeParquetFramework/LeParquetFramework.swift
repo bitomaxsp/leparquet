@@ -7,35 +7,34 @@
 
 import Foundation
 
-var debug = true
+// var debug = true
 
 // TODO: rename to Factory
-public final class DeckParquetLayout {
+public final class LayoutProducer {
     let config: Config
+    let debug: Bool
 
-    public init(config: Config) {
+    public init(config: Config, verbose: Bool?) {
         self.config = config
-        debug = config.showCalculations
+        if let v = verbose {
+            self.debug = v
+        } else {
+            self.debug = config.showCalculations
+        }
     }
 
-    public func calculate() {
+    public func calculate() -> Report {
         let report = Report()
 
         for choice in self.config.floorChoices {
             for room in self.config.rooms {
                 let input = LayoutInput(self.config, choice, room)
-                let engine = RowLayoutEngine(input)
+                let engine = RowLayoutEngine(input, debug: self.debug)
                 let rawReport = engine.layout()
                 report.add(rawReport, forRoom: room, withChoice: choice)
             }
         }
-    }
 
-    public var report: Report {
-        self.doReport()
-    }
-
-    func doReport() -> Report {
-        return Report()
+        return report
     }
 }

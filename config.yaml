@@ -1,5 +1,5 @@
 ---
-show_calculations: true
+show_calculations: false    
 
 # One side value
 height_clearance: 10

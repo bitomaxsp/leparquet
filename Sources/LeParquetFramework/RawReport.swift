@@ -114,5 +114,3 @@ class RawReport {
         print("\n")
     }
 }
-
-// let mul = 1.0 * board_width

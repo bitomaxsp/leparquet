@@ -26,17 +26,18 @@ let package = Package(
             name: "leparquet",
             dependencies: [
                 "LeParquetFramework",
-                "Yams",
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ]
         ),
         .target(
             name: "LeParquetFramework",
-            dependencies: []
+            dependencies: [
+                "Yams",
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            ]
         ),
         .testTarget(
             name: "leparquetTests",
-            dependencies: []
+            dependencies: ["LeParquetFramework"]
         ),
     ]
 )

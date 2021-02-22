@@ -22,16 +22,15 @@ extension LeParquet {
 //        @Option(help: "The kind of average to provide.")
 //        var kind: Kind = .mean
 
-        // TODO: Fix optional bool
-        @Flag(name: .shortAndLong, help: "Output verbose calculations. Overrides config value")
-        var verbose: Int
+        enum Verbose: EnumerableFlag {
+            case verbose
+        }
+
+        @Flag(help: "Output verbose calculations. Overrides config value")
+        var verbose: Verbose?
 
         @Argument(help: "YAML configuration file with rooms and materials")
         var configPath: String
-
-        mutating func validate() throws {
-            print("func validate \(self.verbose)")
-        }
 
         mutating func run() throws {
             print("Loading config \(self.configPath)")
@@ -41,9 +40,8 @@ extension LeParquet {
             let data = try Data(contentsOf: URL(fileURLWithPath: configPath))
             let config = try decoder.decode(Config.self, from: data)
 
-            let layout = DeckParquetLayout(config: config)
-            layout.calculate()
-            let report = layout.report
+            let layout = LayoutProducer(config: config, verbose: self.verbose == nil ? nil : true)
+            let report = layout.calculate()
             report.print()
         }
     }
