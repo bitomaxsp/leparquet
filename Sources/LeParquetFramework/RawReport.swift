@@ -88,10 +88,10 @@ class RawReport {
     }
 
     func printWidth() {
-        print("Unusable normalized rests: \(self.trashCuts.map { $0.width.round(4) }) [norm to board length]")
         self.printRows()
-        self.printRows(self.input.material.board.size.width)
+        print("Unusable normalized rests: \(self.trashCuts.map { $0.width.round(4) }) [norm to board length]")
 
+        self.printRows(self.input.material.board.size.width)
         print("Unusable rests: \(self.trashCuts.map { ($0.width * self.input.material.board.size.width).round(4) }) mm")
 
         let rest_width_sum = self.trashCuts.reduce(0.0) { (next, b) in
@@ -154,7 +154,8 @@ class RawReport {
     }
 
     func printRows(_ mul: Double = 1.0) {
-        print("\nLayout [nomalized]:")
+        let flavor = mul > 1.0 ? "real" : "nomalized"
+        print("\nLayout [\(flavor)]:")
 
         for r in self.rows {
             print(r.map { ($0.width * mul).round(4) })

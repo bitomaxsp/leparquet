@@ -17,7 +17,8 @@ public struct Config: Codable {
         case coverMargin = "cover_margin"
         case rooms
         case floorChoices = "floor_choices"
-        case toolCutWidth = "tool_cut_width"
+        case latToolCutWidth = "lateral_tool_cut_width"
+        case lonToolCutWidth = "longitudinal_tool_cut_width"
         case floorIndex = "floor_index"
     }
 
@@ -36,7 +37,9 @@ public struct Config: Codable {
     // Could be override per room, in %/100
     var coverMargin = 0.05
     // Tool cut width in mm
-    var toolCutWidth = 2.0
+    var latToolCutWidth = 2.0
+    // Tool cut width in mm
+    var lonToolCutWidth = 3.0
     // Seleced floor index for particular calculation
     var floorIndex: Int?
 
