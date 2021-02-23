@@ -15,6 +15,14 @@ struct LayoutInput {
         init(_ floor: Config.FloorConfig) {
             self.board = Material.Board(size: floor.boardSize, area: floor.boardSize.height * floor.boardSize.width * 1e-6)
             self.pack = Material.Pack(area: floor.packArea, boardsCount: floor.boardsPerPack)
+            self.type = floor.type
+            self.name = floor.name
+            self.pricePerM2 = floor.pricePerM2
+            if let m = floor.packWeight {
+                self.packWeight = Measurement<UnitMass>(value: m, unit: .kilograms)
+            } else {
+                self.packWeight = nil
+            }
         }
 
         struct Board {
@@ -29,6 +37,10 @@ struct LayoutInput {
 
         let board: Board
         let pack: Pack
+        let type: String
+        let name: String
+        let pricePerM2: Double?
+        let packWeight: Measurement<UnitMass>?
     }
 
     enum FirstBoard: String, CaseIterable, Codable {

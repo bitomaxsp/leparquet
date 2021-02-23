@@ -83,9 +83,14 @@ public struct Config: Codable {
             case boardSize = "board_size"
             case packArea = "pack_area"
             case boardsPerPack = "boards_per_pack"
+            case pricePerM2 = "price_per_msq"
+            case packWeight = "pack_weight"
         }
 
         var type = ""
+        var name = ""
+        var pricePerM2: Double?
+        var packWeight: Double?
         var boardSize: Size
         // One of the following must be set
         // If both set, verification is done using all values

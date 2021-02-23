@@ -109,6 +109,16 @@ class RawReport {
         print("Used boards: \(self.boardsUsed)", to: &ss)
 
         let totalBoardsArea = Double(self.boardsUsed) * self.boardArea
+        print("Total buy area as [boards * boardArea]: \(totalBoardsArea) m^2", to: &ss)
+        print("Total buy area - total trash area: \((totalBoardsArea - total_trash).round(4)) m^2", to: &ss)
+
+        if let price = self.input.material.pricePerM2 {
+            print("Total price (using total area): \((price * totalBoardsArea).roundf(2))", to: &ss)
+        } else {
+            print("", to: &ss)
+        }
+
+        var packsRequired: Double?
 
         if let packArea = self.input.material.pack.area {
             print("----------------------------------------------------", to: &ss)
@@ -122,29 +132,41 @@ class RawReport {
             // Here we ASSUME, that it is possible to find pack of 10 boards hence if fraction is less than 0.1 we round down, otherwise up
             let fractionPart = packsRequiredDbl.remainder(dividingBy: floor(packsRequiredDbl))
             let limit = 0.1 // Max 10 board per pack
-            let packsRequired = fractionPart < limit ? packsRequiredDbl.rounded() : packsRequiredDbl.rounded(.up)
-            print("** Unused boards left: \((packsRequired * boardsPerPack - Double(self.boardsUsed)).rounded())", to: &ss)
-            print("** Packs required: \(packsRequired.rounded())", to: &ss)
+            packsRequired = fractionPart < limit ? packsRequiredDbl.rounded() : packsRequiredDbl.rounded(.up)
+            print("** Unused boards left: \((packsRequired! * boardsPerPack - Double(self.boardsUsed)).rounded())", to: &ss)
+            print("** Packs required: \(packsRequired!.rounded())", to: &ss)
             print("** Estimated board/pack: \(boardsPerPack.round(1))", to: &ss)
         }
         print("----------------------------------------------------", to: &ss)
         if let boardsPerPack = self.input.material.pack.boardsCount {
             print("++ Calculate using boards per pack: \(boardsPerPack)", to: &ss)
-            let packsRequired = self.boardsUsed / boardsPerPack + (self.boardsUsed % boardsPerPack == 0 ? 0 : 1)
+            let packs = Double(self.boardsUsed / boardsPerPack) + (self.boardsUsed % boardsPerPack == 0 ? 0.0 : 1.0)
+            if packsRequired == nil {
+                packsRequired = packs
+            } else {
+                if packsRequired! != packs {
+                    print(">>>>>>> WARNING: two methods gives two different results for number of packs!")
+                }
+            }
             let rest = self.boardsUsed % boardsPerPack
             print("++ Unused boards left: \(rest == 0 ? rest : boardsPerPack - rest)", to: &ss)
-            print("++ Packs required: \(packsRequired)", to: &ss)
+            print("++ Packs required: \(packs)", to: &ss)
             print("++ Estimated pack area: \(Double(boardsPerPack) * self.boardArea)", to: &ss)
             print("----------------------------------------------------", to: &ss)
         }
 
-        print("Total buy area as [boards * boardArea]: \(totalBoardsArea) m^2", to: &ss)
-        print("Total buy area - total trash area: \((totalBoardsArea - total_trash).round(4)) m^2", to: &ss)
+        if let weight = self.input.material.packWeight {
+            if let p = packsRequired {
+                print("Total weight: \(weight.converted(to: .kilograms) * p)", to: &ss)
+            }
+        } else {
+            print("", to: &ss)
+        }
 
         print("\n----------- THEORY DATA -----------", to: &ss)
 
         print("Calculated area: \(self.input.calc_covered_area.round(4)) m^2", to: &ss)
-        print("Calculated area + margin: \(self.input.calc_covered_area_with_margin.round(4)) m^2", to: &ss)
+        print("Calculated area + (\(self.input.coverMaterialMargin * 100)% margin): \(self.input.calc_covered_area_with_margin.round(4)) m^2", to: &ss)
         self.boardNumWithMargin = Int(ceil(self.input.calc_covered_area_with_margin / self.boardArea))
         print("Calculated boards (using margin), float: \((self.input.calc_covered_area_with_margin / self.boardArea).round(4))", to: &ss)
         print("Calculated boards (using margin), int: \(self.boardNumWithMargin)", to: &ss)
