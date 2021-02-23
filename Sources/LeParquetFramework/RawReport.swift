@@ -113,25 +113,32 @@ class RawReport {
         if let packArea = self.input.material.pack.area {
             print("----------------------------------------------------")
             print("** Calculate using pack area: \(packArea)")
-            let packsRequired = ceil(totalBoardsArea / packArea)
-            let estimatedBoardCount = packArea / self.boardArea
-            // FIXME: error
-            print("** Unused boards left: \((packsRequired * estimatedBoardCount - Double(self.boardsUsed)))")
+            let packsRequiredDbl = totalBoardsArea / packArea
+            let boardsPerPack = ceil(packArea / self.boardArea)
+            // fractionPart represents how much of last pack is used.
+            // For example for pack of 6 boards: 1/6 is 0.1(6)
+            // For example for pack of 8 boards: 1/8 is 0.125
+            // For pack of 10 boards, it is 0.1 and etc.
+            // Here we ASSUME, that it is possible to find pack of 10 boards hence if fraction is less than 0.1 we round down, otherwise up
+            let fractionPart = packsRequiredDbl.remainder(dividingBy: floor(packsRequiredDbl))
+            let limit = 0.1 // Max 10 board per pack
+            let packsRequired = fractionPart < limit ? packsRequiredDbl.rounded() : packsRequiredDbl.rounded(.up)
+            print("** Unused boards left: \((packsRequired * boardsPerPack - Double(self.boardsUsed)).rounded())")
             print("** Packs required: \(packsRequired.rounded())")
-            print("** Estimated board/pack: \(estimatedBoardCount.round(1))")
+            print("** Estimated board/pack: \(boardsPerPack.round(1))")
         }
         print("----------------------------------------------------")
         if let boardsPerPack = self.input.material.pack.boardsCount {
             print("++ Calculate using boards per pack: \(boardsPerPack)")
             let packsRequired = self.boardsUsed / boardsPerPack + (self.boardsUsed % boardsPerPack == 0 ? 0 : 1)
             let rest = self.boardsUsed % boardsPerPack
-            print("++ Unsed boards left: \(boardsPerPack - rest == 0 ? boardsPerPack : rest)")
+            print("++ Unused boards left: \(rest == 0 ? rest : boardsPerPack - rest)")
             print("++ Packs required: \(packsRequired)")
             print("++ Estimated pack area: \(Double(boardsPerPack) * self.boardArea)")
             print("----------------------------------------------------")
         }
 
-        print("Total buy area as [boards * board area]: \(totalBoardsArea) m^2")
+        print("Total buy area as [boards * boardArea]: \(totalBoardsArea) m^2")
         print("Total buy area - total trash area: \((totalBoardsArea - total_trash).round(4)) m^2")
 
         print("\n----------- THEORY DATA -----------")
