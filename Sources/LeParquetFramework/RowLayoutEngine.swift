@@ -95,8 +95,8 @@ public class RowLayoutEngine {
         let needFirstCut = !board_height.eq(self.report.first_row_height)
         let needLastCut = !board_height.eq(self.report.last_row_height)
 
-        self.report.unused_height_on_first_row = board_height - self.report.first_row_height - (needFirstCut ? self.input.lonToolCutWidth : 0.0)
-        self.report.unused_height_on_last_row = board_height - self.report.last_row_height - (needLastCut ? self.input.lonToolCutWidth : 0.0)
+        self.report.unused_height_on_first_row = board_height - self.report.first_row_height - (needFirstCut ? min(self.report.unused_height_on_first_row, self.input.lonToolCutWidth) : 0.0)
+        self.report.unused_height_on_last_row = board_height - self.report.last_row_height - (needLastCut ? min(self.report.unused_height_on_last_row, self.input.lonToolCutWidth) : 0.0)
         precondition(self.report.unused_height_on_first_row >= 0.0, "Unused first row rest must be positive")
         precondition(self.report.unused_height_on_last_row >= 0.0, "Unused last row rest must be positive")
     }
