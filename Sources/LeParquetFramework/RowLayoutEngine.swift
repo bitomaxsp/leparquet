@@ -93,8 +93,10 @@ public class RowLayoutEngine {
             }
         }
 
-        self.report.unused_height_on_first_row = board_height - self.report.first_row_height
-        self.report.unused_height_on_last_row = board_height - self.report.last_row_height
+        self.report.unused_height_on_first_row = board_height - self.report.first_row_height - self.input.lonToolCutWidth
+        self.report.unused_height_on_last_row = board_height - self.report.last_row_height - self.input.lonToolCutWidth
+        precondition(self.report.unused_height_on_first_row > 0.0, "Unused first row rest must be positive")
+        precondition(self.report.unused_height_on_last_row > 0.0, "Unused last row rest must be positive")
     }
 
     private func normalizedLayoutCalculation(_ normalizedRowWidth: Double) {

@@ -83,8 +83,8 @@ class RawReport {
 
         print("Total height: \(self.first_row_height) + \(self.boardHeight)*\(Double(self.total_rows) - N) + \(self.last_row_height) = \(total_height)mm")
         print("(Remember, you need to add both side clearance)")
-        print("Unused height from first row: \(self.unused_height_on_first_row)mm")
-        print("Unused height from last row: \(self.unused_height_on_last_row)mm")
+        print("Unused height from first row: \(self.unused_height_on_first_row)mm (cut width: \(self.input.lonToolCutWidth)mm)")
+        print("Unused height from last row: \(self.unused_height_on_last_row)mm (cut width: \(self.input.lonToolCutWidth)mm)")
     }
 
     func printWidth() {
