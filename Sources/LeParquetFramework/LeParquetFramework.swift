@@ -43,7 +43,7 @@ public final class LayoutProducer {
             let input = LayoutInput(self.config, floor, room)
             let engine = RowLayoutEngine(input, debug: self.debug)
             let rawReport = engine.layout()
-            report.add(rawReport, forRoom: room, withChoice: floor)
+            report.add(rawReport)
         }
     }
 }

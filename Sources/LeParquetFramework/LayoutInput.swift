@@ -45,6 +45,8 @@ struct LayoutInput {
         }
     }
 
+    let roomName: String
+    let floorName: String
     let actualRoomSize: Size
     /// This size is actualRoomSize - side clearance
     let effectiveRoomSize: Size
@@ -62,6 +64,8 @@ struct LayoutInput {
     let calc_covered_area_with_margin: Double
 
     init(_ config: Config, _ floor: Config.FloorConfig, _ room: Config.RoomConfig) {
+        self.roomName = room.name
+        self.floorName = floor.type
         self.actualRoomSize = room.size
         // Fallback to 1/3 if user input is invalid
         self.firstBoard = FirstBoard(rawValue: room.firstBoard) ?? .one_3

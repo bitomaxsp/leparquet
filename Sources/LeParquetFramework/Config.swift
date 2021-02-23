@@ -94,4 +94,16 @@ public struct Config: Codable {
     }
 
     var floorChoices = [FloorConfig]()
+
+    @frozen enum ValidationError: Error {
+        case badFloorIndex(String)
+    }
+
+    public func validate() throws {
+        if let idx = self.floorIndex {
+            if idx >= self.floorChoices.count {
+                throw ValidationError.badFloorIndex("Zero based floor_index (\(idx)) must be less than nuber of floor choices (\(self.floorChoices.count)")
+            }
+        }
+    }
 }

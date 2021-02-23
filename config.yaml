@@ -12,9 +12,9 @@ min_last_row_height: 60.0
 desired_last_row_height: 100.0
 # Could be override per room, in %/100
 cover_margin: 0.05
-# Optinal: use it if you want to limit calculation to only selected floor type
+# Optional: use it if you want to limit calculation to only selected floor type
 # Otherwise leparquet will use all floors
-floor_index: 0
+# floor_index: 4
 # Tool cut width for short cuts in mm
 lateral_tool_cut_width: 2.0
 # Tool cut width for longitudinal cuts in mm
@@ -45,7 +45,7 @@ rooms:
 
 floor_choices:
   -
-     type: "Kärs 151L8AEK09KW220"
+     type: "151L8AEK09KW220"
      board_size:
        height: 187
        width: 2266
@@ -54,7 +54,7 @@ floor_choices:
      boards_per_pack: 6
 
   -
-    type: "Timberwise-185 Ek"
+    type: "Timberwise-185-Ek"
     board_size:
       height: 185
       width: 2180
@@ -64,7 +64,7 @@ floor_choices:
     boards_per_pack: 6
 
   -
-    type: "7876069T #1"
+    type: "7876069T-#1"
     board_size:
       height: 162
       width: 2000
@@ -73,7 +73,7 @@ floor_choices:
     boards_per_pack: 6
 
   -
-    type: "7876069T #2"
+    type: "7876069T-#2"
     board_size:
       height: 162
       width: 2200
@@ -82,7 +82,7 @@ floor_choices:
     boards_per_pack: 6
 
   -
-     type: "Kärs 151L8AEK1DKW240"
+     type: "151L8AEK1DKW240"
      board_size:
        height: 187
        width: 2420

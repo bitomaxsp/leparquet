@@ -39,10 +39,11 @@ extension LeParquet {
 
             let data = try Data(contentsOf: URL(fileURLWithPath: configPath))
             let config = try decoder.decode(Config.self, from: data)
+            try config.validate()
 
             let layout = LayoutProducer(config: config, verbose: self.verbose == nil ? nil : true)
             let report = layout.calculate()
-            report.print()
+            report.generateFiles()
         }
     }
 }
