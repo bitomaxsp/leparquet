@@ -67,6 +67,9 @@ class RawReport {
     func output() -> String {
         var ss = ""
 
+        // TODO: support backward layout
+        print("NOTE: Layout is done from left ro right, from top to bottom", to: &ss)
+
         print("Total rows: \(self.total_rows)", to: &ss)
         print("First row height: \(self.first_row_height)mm", to: &ss)
         print("Middle height: \(self.boardHeight)mm", to: &ss)

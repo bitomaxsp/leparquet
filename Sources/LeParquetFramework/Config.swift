@@ -66,6 +66,8 @@ public struct Config: Codable {
         var size: Size
         // TODO: add enum decode
         //        var first_board: FirstBoard = .one_3 // 1, 1/3, 2/3
+        // free joints
+        // regular joints
         var firstBoard = ""
 
         var heightClearance: Double?
