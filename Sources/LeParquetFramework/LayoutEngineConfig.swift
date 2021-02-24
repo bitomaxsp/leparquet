@@ -1,14 +1,6 @@
-//
-//  File.swift
-//
-//
-//  Created by Dmitry on 2021-02-18.
-//
-
 import Foundation
 
-// TODO: rename
-struct LayoutInput {
+struct LayoutEngineConfig {
     typealias Size = Config.Size
 
     struct Material {

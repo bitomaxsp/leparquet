@@ -1,15 +1,5 @@
-//
-//  File.swift
-//
-//
-//  Created by Dmitry on 2021-02-18.
-//
-
 import Foundation
 
-// var debug = true
-
-// TODO: rename to Factory
 public final class LayoutProducer {
     let config: Config
     let debug: Bool
@@ -40,7 +30,7 @@ public final class LayoutProducer {
 
     private func calculateRoom(for floor: Config.FloorConfig, to report: Report) {
         for room in self.config.rooms {
-            let input = LayoutInput(self.config, floor, room)
+            let input = LayoutEngineConfig(self.config, floor, room)
             let engine = RowLayoutEngine(input, debug: self.debug)
             let rawReport = engine.layout()
             report.add(rawReport)

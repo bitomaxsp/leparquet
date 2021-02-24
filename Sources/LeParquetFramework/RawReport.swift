@@ -1,22 +1,15 @@
-//
-//  File.swift
-//
-//
-//  Created by Dmitry on 2021-02-18.
-//
-
 import Foundation
 
 class RawReport {
     // TODO: rename
     typealias Stash = [ReusableBoard]
 
-    init(_ input: LayoutInput) {
+    init(_ input: LayoutEngineConfig) {
         self.input = input
         self.first_row_height = Double(input.material.board.size.height)
     }
 
-    let input: LayoutInput
+    let input: LayoutEngineConfig
     var boardHeight: Double { return self.input.material.board.size.height }
     var boardArea: Double { return self.input.material.board.area }
     var roomSize: Config.Size { return self.input.effectiveRoomSize }

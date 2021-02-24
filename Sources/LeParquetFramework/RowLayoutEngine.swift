@@ -1,10 +1,3 @@
-//
-//  File.swift
-//
-//
-//  Created by Dmitry on 2021-02-18.
-//
-
 import Foundation
 
 public class RowLayoutEngine {
@@ -14,7 +7,7 @@ public class RowLayoutEngine {
 
     // ###################################
 
-    let input: LayoutInput
+    let input: LayoutEngineConfig
     let report: RawReport
     let normalizedWholeStep = 1.0
     let debug: Bool
@@ -22,7 +15,7 @@ public class RowLayoutEngine {
     private var reusableLeft = StashOfRights()
     private var reusableRight = StashOfLefts()
 
-    init(_ input: LayoutInput, debug: Bool) {
+    init(_ input: LayoutEngineConfig, debug: Bool) {
         self.input = input
         self.report = RawReport(self.input)
         self.debug = debug
