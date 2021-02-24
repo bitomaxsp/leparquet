@@ -1,26 +1,26 @@
 import Foundation
 
 class RawReport {
-    // TODO: rename
-    typealias Stash = [ReusableBoard]
+    typealias BoardStash = [ReusableBoard]
 
-    init(_ input: LayoutEngineConfig) {
-        self.input = input
-        self.first_row_height = Double(input.material.board.size.height)
+    init(_ config: LayoutEngineConfig, normalizedWidth: Double) {
+        self.engineConfig = config
+        self.first_row_height = Double(config.material.board.size.height)
+        self.normalizedWidth = normalizedWidth
     }
 
-    let input: LayoutEngineConfig
-    var boardHeight: Double { return self.input.material.board.size.height }
-    var boardArea: Double { return self.input.material.board.area }
-    var roomSize: Config.Size { return self.input.effectiveRoomSize }
+    let normalizedWidth: Double
+    let engineConfig: LayoutEngineConfig
+    var boardHeight: Double { return self.engineConfig.material.board.size.height }
+    var boardArea: Double { return self.engineConfig.material.board.area }
+    var roomSize: Config.Size { return self.engineConfig.effectiveRoomSize }
 
     var first_row_height: Double
     var last_row_height = 0.0
 
-    private var rows = [Stash]()
-
+    private var rows = [BoardStash]()
     // This is pure trash, middle cuts mostly
-    private var trashCuts = Stash()
+    private var trashCuts = BoardStash()
 
     private var boardsUsed = 0
 
@@ -32,19 +32,18 @@ class RawReport {
     // MARK: Implementation
 
     func newRow() {
-        self.rows.append(Stash())
+        self.rows.append(BoardStash())
     }
 
     func addBoard(_ board: ReusableBoard) {
         self.rows[self.rows.count - 1].append(board)
     }
 
-    // TODO: use 1.0 width board
-    func newBoard(width: Double) -> FloorBoard {
+    func newBoard() -> FloorBoard {
         defer {
             self.boardsUsed += 1
         }
-        return FloorBoard(width: width, height: self.boardHeight)
+        return FloorBoard(width: self.normalizedWidth, height: self.boardHeight)
     }
 
     func stash(trash: ReusableBoard) {
@@ -81,14 +80,14 @@ class RawReport {
 
         print("Total height: \(self.first_row_height) + \(self.boardHeight)*\(Double(self.total_rows) - N) + \(self.last_row_height) = \(total_height)mm", to: &ss)
         print("(Remember, you need to add both side clearance)", to: &ss)
-        print("Unused height from first row: \(self.unused_height_on_first_row)mm (cut width: \(self.input.lonToolCutWidth)mm)", to: &ss)
-        print("Unused height from last row: \(self.unused_height_on_last_row)mm (cut width: \(self.input.lonToolCutWidth)mm)", to: &ss)
+        print("Unused height from first row: \(self.unused_height_on_first_row)mm (cut width: \(self.engineConfig.lonToolCutWidth)mm)", to: &ss)
+        print("Unused height from last row: \(self.unused_height_on_last_row)mm (cut width: \(self.engineConfig.lonToolCutWidth)mm)", to: &ss)
 
         self.printRows(to: &ss)
         print("Unusable normalized rests: \(self.trashCuts.map { $0.width.round(4) }) [norm to board length]", to: &ss)
 
-        self.printRows(to: &ss, self.input.material.board.size.width)
-        print("Unusable rests: \(self.trashCuts.map { ($0.width * self.input.material.board.size.width).round(4) }) mm", to: &ss)
+        self.printRows(to: &ss, self.engineConfig.material.board.size.width)
+        print("Unusable rests: \(self.trashCuts.map { ($0.width * self.engineConfig.material.board.size.width).round(4) }) mm", to: &ss)
 
         let rest_width_sum = self.trashCuts.reduce(0.0) { (next, b) in
             return next + b.width
@@ -108,7 +107,7 @@ class RawReport {
         print("Total buy area as [boards * boardArea]: \(totalBoardsArea) m^2", to: &ss)
         print("Total buy area - total trash area: \((totalBoardsArea - total_trash).round(4)) m^2", to: &ss)
 
-        if let price = self.input.material.pricePerM2 {
+        if let price = self.engineConfig.material.pricePerM2 {
             print("Total price (using total area): \((price * totalBoardsArea).roundf(2))", to: &ss)
         } else {
             print("", to: &ss)
@@ -116,7 +115,7 @@ class RawReport {
 
         var packsRequired: Double?
 
-        if let packArea = self.input.material.pack.area {
+        if let packArea = self.engineConfig.material.pack.area {
             print("----------------------------------------------------", to: &ss)
             print("** Calculate using pack area: \(packArea)", to: &ss)
             let packsRequiredDbl = totalBoardsArea / packArea
@@ -134,7 +133,7 @@ class RawReport {
             print("** Estimated board/pack: \(boardsPerPack.round(1))", to: &ss)
         }
         print("----------------------------------------------------", to: &ss)
-        if let boardsPerPack = self.input.material.pack.boardsCount {
+        if let boardsPerPack = self.engineConfig.material.pack.boardsCount {
             print("++ Calculate using boards per pack: \(boardsPerPack)", to: &ss)
             let packs = Double(self.boardsUsed / boardsPerPack) + (self.boardsUsed % boardsPerPack == 0 ? 0.0 : 1.0)
             if packsRequired == nil {
@@ -151,7 +150,7 @@ class RawReport {
             print("----------------------------------------------------", to: &ss)
         }
 
-        if let weight = self.input.material.packWeight {
+        if let weight = self.engineConfig.material.packWeight {
             if let p = packsRequired {
                 print("Total weight: \(weight.converted(to: .kilograms) * p)", to: &ss)
             }
@@ -161,12 +160,12 @@ class RawReport {
 
         print("\n----------- THEORY DATA -----------", to: &ss)
 
-        print("Calculated area: \(self.input.calc_covered_area.round(4)) m^2", to: &ss)
-        print("Calculated area + (\(self.input.coverMaterialMargin * 100)% margin): \(self.input.calc_covered_area_with_margin.round(4)) m^2", to: &ss)
-        self.boardNumWithMargin = Int(ceil(self.input.calc_covered_area_with_margin / self.boardArea))
-        print("Calculated boards (using margin), float: \((self.input.calc_covered_area_with_margin / self.boardArea).round(4))", to: &ss)
+        print("Calculated area: \(self.engineConfig.calc_covered_area.round(4)) m^2", to: &ss)
+        print("Calculated area + (\(self.engineConfig.coverMaterialMargin * 100)% margin): \(self.engineConfig.calc_covered_area_with_margin.round(4)) m^2", to: &ss)
+        self.boardNumWithMargin = Int(ceil(self.engineConfig.calc_covered_area_with_margin / self.boardArea))
+        print("Calculated boards (using margin), float: \((self.engineConfig.calc_covered_area_with_margin / self.boardArea).round(4))", to: &ss)
         print("Calculated boards (using margin), int: \(self.boardNumWithMargin)", to: &ss)
-        print("Total trash calc: \((totalBoardsArea - self.input.calc_covered_area).round(4)) m^2", to: &ss)
+        print("Total trash calc: \((totalBoardsArea - self.engineConfig.calc_covered_area).round(4)) m^2", to: &ss)
 
         return ss
     }
