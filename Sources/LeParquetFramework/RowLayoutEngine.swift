@@ -119,7 +119,7 @@ public class RowLayoutEngine {
             }
 
             precondition(board != nil, "Board must be valid here")
-            self.report.addBoard(board!)
+            self.report.add(board: board!)
             rowCovered += board!.width
 
             if self.debug {
@@ -153,7 +153,7 @@ public class RowLayoutEngine {
                 precondition(board != nil, "Board must be valid here")
 
                 rowCovered += cutLength
-                self.report.addBoard(board!)
+                self.report.add(board: board!)
             }
             // Update step before new row
             cutLength = self.nextRowFirstLength(startLength, row_count)

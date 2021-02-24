@@ -2,7 +2,8 @@ import Foundation
 
 class RawReport {
     typealias BoardStash = [ReusableBoard]
-
+    typealias InstructionList = [String]
+    
     init(_ config: LayoutEngineConfig, normalizedWidth: Double) {
         self.engineConfig = config
         self.first_row_height = Double(config.material.board.size.height)
@@ -21,7 +22,7 @@ class RawReport {
     private var rows = [BoardStash]()
     // This is pure trash, middle cuts mostly
     private var trashCuts = BoardStash()
-
+    private var instructions = InstructionList()
     private var boardsUsed = 0
 
     var unused_height_on_first_row: Double = 0.0
@@ -35,7 +36,7 @@ class RawReport {
         self.rows.append(BoardStash())
     }
 
-    func addBoard(_ board: ReusableBoard) {
+    func add(board: ReusableBoard) {
         self.rows[self.rows.count - 1].append(board)
     }
 
@@ -45,7 +46,11 @@ class RawReport {
         }
         return FloorBoard(width: self.normalizedWidth, height: self.boardHeight)
     }
-
+    
+    func add(instruction: String) {
+        self.instructions.append(instruction)
+    }
+    
     func stash(trash: ReusableBoard) {
         precondition(trash.width > 0.0, "Zero width trash. Weird!")
         self.trashCuts.append(trash)
