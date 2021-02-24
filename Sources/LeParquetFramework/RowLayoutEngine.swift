@@ -100,12 +100,13 @@ public class RowLayoutEngine {
         var cutLength: Double = startLength
         // ReusableBoard(width: start, height: self.input.material.board.size.height)
 
-        for row_count in 0 ..< self.report.total_rows {
+        for rowCount in 0 ..< self.report.total_rows {
             if self.debug {
-                print("Row -------------------------------- \(row_count)")
+                print("Row -------------------------------- \(rowCount)")
             }
 
             self.report.newRow()
+            self.report.add(instruction: "Start row #\(rowCount + 1):")
             var rowCovered = 0.0
 
             // First board used from LEFT stash
@@ -114,8 +115,8 @@ public class RowLayoutEngine {
                 // Use new first board and save the rest if stash is empty
                 board = self.useWholeBoardOnTheLeftSide(cutLength)
             } else {
-                // TODO:
                 // Step: Take board marked with X from Left stash
+                self.report.add(instruction: "Take board marked as \(board!.mark) and put it in the row.")
             }
 
             precondition(board != nil, "Board must be valid here")
@@ -123,21 +124,23 @@ public class RowLayoutEngine {
             rowCovered += board!.width
 
             if self.debug {
-                print("Row:\(row_count) Step: \(cutLength.round(4))")
+                print("Row:\(rowCount) Step: \(cutLength.round(4))")
             }
 
             // Use whole board if we in the middle
             cutLength = Self.normalizedWholeStep
 
             while rowCovered < normalizedRowWidth {
+                board = nil
                 cutLength = min(Self.normalizedWholeStep, Double(normalizedRowWidth - rowCovered))
 
                 if self.debug {
-                    print("Row:\(row_count) Step: \(cutLength.round(4))")
+                    print("Row:\(rowCount) Step: \(cutLength.round(4))")
                 }
 
                 if cutLength == Self.normalizedWholeStep {
                     board = self.report.newBoard()
+                    self.report.add(instruction: "Take new board from the pack. Put in the row.")
 
                 } else if cutLength < Self.normalizedWholeStep {
                     board = self.useBoardFromRightStash(cutLength)
@@ -146,8 +149,8 @@ public class RowLayoutEngine {
                         // Or new one and save the rest
                         board = self.useWholeBoardOnTheRightSide(cutLength)
                     } else {
-                        // TODO:
                         // Step: Take board marked with X from right stash
+                        self.report.add(instruction: "Take board marked as \(board!.mark) and put it in the row.")
                     }
                 }
                 precondition(board != nil, "Board must be valid here")
@@ -156,7 +159,7 @@ public class RowLayoutEngine {
                 self.report.add(board: board!)
             }
             // Update step before new row
-            cutLength = self.nextRowFirstLength(startLength, row_count)
+            cutLength = self.nextRowFirstLength(startLength, rowCount)
         }
 
         if self.debug {
@@ -181,12 +184,16 @@ public class RowLayoutEngine {
         precondition(cutLength > 0.0, "Cut must be greater than 0")
 
         let board = self.report.newBoard()
+        self.report.add(instruction: "Take new board from the pack.")
+
         if cutLength < Self.normalizedWholeStep {
             let (left, right) = board.cutAlongWidth(atDistance: cutLength, from: .left, cutWidth: self.engineConfig.normalizedLatToolCutWidth)
             precondition(left.width.eq(cutLength), "left.width must be cutLength")
 
-            // TODO:
-            // Step: Cut in two, use right part, mark it with X
+            // Step: Cut in two
+            let aCut = Measurement<UnitLength>(value: cutLength * self.engineConfig.material.board.size.width, unit: UnitLength.millimeters)
+            self.report.append(instruction: "Cut \(aCut.value.roundf(2)) from the left side.")
+            self.report.append(instruction: "Put LEFT cut in the row. Mark RIGHT cut as \(right.mark).")
 
             // Collect usable only if it grater than smallest cutLength for the last which 1/3 for the deck layout
             if right.width >= Double(1, 3) { // TODO: min row step (runout)
@@ -197,12 +204,12 @@ public class RowLayoutEngine {
                 self.stash(right: right)
             } else {
                 self.collect(trash: right)
-                // TODO: throw away it
             }
             return left
+
         } else {
-            // TODO:
-            // Step: Take whole new board and use it
+            // Step: put in row
+            self.report.append(instruction: "Put in the row.")
         }
 
         return board
@@ -214,13 +221,17 @@ public class RowLayoutEngine {
 
         // Take new board
         let board = self.report.newBoard()
-        // Determine rest from lest to right side
+        self.report.add(instruction: "Take new board from the pack.")
+
+        // Determine rest from left to right side
         if cutLength < Self.normalizedWholeStep {
             let (left, right) = board.cutAlongWidth(atDistance: cutLength, from: .right, cutWidth: self.engineConfig.normalizedLatToolCutWidth)
             precondition(right.width.eq(cutLength), "right.width must be cutLength")
 
-            // TODO:
-            // Step: Cut in two, use right part, mark it with X
+            // Step: Cut in two
+            let aCut = Measurement<UnitLength>(value: cutLength * self.engineConfig.material.board.size.width, unit: UnitLength.millimeters)
+            self.report.append(instruction: "Cut \(aCut) from the right side.")
+            self.report.append(instruction: "Put RIGHT cut in the row. Mark LEFT cut as \(left.mark).")
 
             self.stash(left: left)
             if self.debug {
@@ -229,18 +240,20 @@ public class RowLayoutEngine {
             return right
 
         } else {
-            // TODO:
-            // Step: Take whole new board and use it
+            // Step: put in row
+            self.report.append(instruction: "Put in the row.")
         }
 
         return board
     }
 
     private func stash(right: RightCut) {
+        self.report.append(instruction: "Put the cut \(right.mark) to the left stash.")
         self.reusableLeft.append(right)
     }
 
     private func stash(left: LeftCut) {
+        self.report.append(instruction: "Put the cut \(left.mark) to the right stash.")
         self.reusableRight.append(left)
     }
 
@@ -283,8 +296,13 @@ public class RowLayoutEngine {
 
                 let edge: VerticalEdge = T.self == LeftCut.self ? .left : .right
 
-                // TODO: account cut width ~ 1-2mm
                 let (left, right) = board.cutAlongWidth(atDistance: requiredLength, from: edge, cutWidth: self.engineConfig.normalizedLatToolCutWidth)
+
+                // Step: Cut in two
+                self.report.add(instruction: "Take board marked as \(board.mark).")
+                let aCut = Measurement<UnitLength>(value: requiredLength * self.engineConfig.material.board.size.width, unit: UnitLength.millimeters)
+                self.report.append(instruction: "Cut \(aCut) from the \(edge) side.")
+                self.report.append(instruction: "Mark LEFT cut as \(left.mark), and RIGHT cut as \(right.mark).")
 
                 if T.self == LeftCut.self {
                     self.collect(trash: right)
@@ -301,6 +319,7 @@ public class RowLayoutEngine {
 
     private func collect(trash: ReusableBoard) {
         self.report.stash(trash: trash)
+        self.report.append(instruction: "Put cut marked as \(trash.mark) to trash.")
         if self.debug {
             print("Collect trash \(trash.width.round(6)), reuse: \(trash.reusable)")
         }

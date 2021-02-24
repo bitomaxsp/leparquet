@@ -14,8 +14,11 @@ public class Report {
             let filename = URL(fileURLWithPath: "./\(report.engineConfig.roomName)+\(report.engineConfig.floorName).txt")
 
             do {
-                try s.write(to: filename, atomically: true, encoding: String.Encoding.utf8)
+                try s.write(to: filename, atomically: true, encoding: .utf8)
                 print("Printed \(filename.lastPathComponent) report")
+                let instructions = report.instructionList()
+                let instructionsURL = URL(fileURLWithPath: "./intructions-\(report.engineConfig.roomName)+\(report.engineConfig.floorName).txt")
+                try instructions.write(to: instructionsURL, atomically: true, encoding: .utf8)
             } catch {
                 // failed to write file – bad permissions, bad filename, missing permissions, or more likely it can't be converted to the encoding
                 print("Error writing file \(filename): \(error)")

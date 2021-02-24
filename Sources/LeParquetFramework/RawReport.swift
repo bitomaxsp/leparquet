@@ -3,7 +3,7 @@ import Foundation
 class RawReport {
     typealias BoardStash = [ReusableBoard]
     typealias InstructionList = [String]
-    
+
     init(_ config: LayoutEngineConfig, normalizedWidth: Double) {
         self.engineConfig = config
         self.first_row_height = Double(config.material.board.size.height)
@@ -46,11 +46,19 @@ class RawReport {
         }
         return FloorBoard(width: self.normalizedWidth, height: self.boardHeight)
     }
-    
+
     func add(instruction: String) {
         self.instructions.append(instruction)
     }
-    
+
+    func append(instruction: String) {
+        if var l = self.instructions.last {
+            l.append(" ")
+            l.append(instruction)
+            self.instructions[self.instructions.count - 1] = l
+        }
+    }
+
     func stash(trash: ReusableBoard) {
         precondition(trash.width > 0.0, "Zero width trash. Weird!")
         self.trashCuts.append(trash)
@@ -172,6 +180,14 @@ class RawReport {
         print("Calculated boards (using margin), int: \(self.boardNumWithMargin)", to: &ss)
         print("Total trash calc: \((totalBoardsArea - self.engineConfig.calc_covered_area).round(4)) m^2", to: &ss)
 
+        return ss
+    }
+
+    func instructionList() -> String {
+        var ss = ""
+        for s in self.instructions {
+            print(s, to: &ss)
+        }
         return ss
     }
 
