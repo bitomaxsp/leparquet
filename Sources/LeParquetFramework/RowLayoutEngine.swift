@@ -352,10 +352,6 @@ extension Double {
         return String(format: "%.\(signs)g", self)
     }
 
-    func roundf(_ signs: Int) -> String {
-        return String(format: "%.\(signs)f", self)
-    }
-
     // Use own eq to avoid rounding errors
     func eq(_ other: Double) -> Bool {
         return fabs(self - other) < Double.ulpOfOne
