@@ -5,8 +5,11 @@ struct LayoutEngineConfig {
 
     struct Material {
         init(_ floor: Config.FloorConfig) {
-            self.board = Material.Board(size: floor.boardSize, area: floor.boardSize.height * floor.boardSize.width * 1e-6)
-            self.pack = Material.Pack(area: floor.packArea, boardsCount: floor.boardsPerPack)
+            let area = floor.boardSize.height * floor.boardSize.width
+            self.board = Material.Board(size: floor.boardSize, area: Measurement(value: area, unit: UnitArea.squareMillimeters))
+            let packArea = floor.packArea == nil ? nil : Measurement(value: floor.packArea!, unit: UnitAreaPerPack.squareMeters)
+            let bpp = floor.boardsPerPack == nil ? nil : Measurement<UnitBoardsPerPack>(value: Double(floor.boardsPerPack!), unit: .boards)
+            self.pack = Material.Pack(area: packArea, boardsCount: bpp)
             self.type = floor.type
             self.name = floor.name
             self.pricePerM2 = floor.pricePerM2
@@ -19,12 +22,12 @@ struct LayoutEngineConfig {
 
         struct Board {
             let size: Size
-            let area: Double // m2
+            let area: Measurement<UnitArea>
         }
 
         struct Pack {
-            let area: Double? // m2
-            let boardsCount: Int?
+            let area: Measurement<UnitAreaPerPack>?
+            let boardsCount: Measurement<UnitBoardsPerPack>?
         }
 
         let board: Board

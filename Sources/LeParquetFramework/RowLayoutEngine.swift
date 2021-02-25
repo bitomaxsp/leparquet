@@ -97,6 +97,7 @@ public class RowLayoutEngine {
     private func normalizedLayoutCalculation(_ normalizedRowWidth: Double) {
         let startLength = self.engineConfig.firstBoard.lengthAsDouble()
 
+        // TODO: normalizedType
         var cutLength: Double = startLength
         // ReusableBoard(width: start, height: self.input.material.board.size.height)
 
@@ -325,13 +326,14 @@ public class RowLayoutEngine {
         }
     }
 
-    private func normalized(width cut: Double, to: UnitLength) -> String {
-        let aCut = Measurement<UnitLength>(value: cut * self.engineConfig.material.board.size.width, unit: UnitLength.millimeters)
-        let n = NumberFormatter()
-        n.maximumFractionDigits = 1
-        n.allowsFloats = true
+    private func normalized(width cut: Double, to newUnit: UnitLength) -> String {
+        let aCut = Measurement<UnitLength>(value: cut * self.engineConfig.material.board.size.width, unit: UnitLength.millimeters).converted(to: newUnit)
+        let numberFormatter = NumberFormatter()
+        numberFormatter.maximumFractionDigits = 1
+        numberFormatter.allowsFloats = true
+        numberFormatter.decimalSeparator = Locale.current.decimalSeparator
         let m = MeasurementFormatter()
-        m.numberFormatter = n
+        m.numberFormatter = numberFormatter
         m.unitOptions = .providedUnit
         return m.string(from: aCut)
     }
