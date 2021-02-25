@@ -191,8 +191,8 @@ public class RowLayoutEngine {
             precondition(left.width.eq(cutLength), "left.width must be cutLength")
 
             // Step: Cut in two
-            let aCut = Measurement<UnitLength>(value: cutLength * self.engineConfig.material.board.size.width, unit: UnitLength.millimeters)
-            self.report.append(instruction: "Cut \(aCut.value.roundf(2)) from the left side.")
+            let aCut = self.normalized(width: cutLength, to: UnitLength.millimeters)
+            self.report.append(instruction: "Cut \(aCut) from the left side.")
             self.report.append(instruction: "Put LEFT cut in the row. Mark RIGHT cut as \(right.mark).")
 
             // Collect usable only if it grater than smallest cutLength for the last which 1/3 for the deck layout
@@ -229,7 +229,7 @@ public class RowLayoutEngine {
             precondition(right.width.eq(cutLength), "right.width must be cutLength")
 
             // Step: Cut in two
-            let aCut = Measurement<UnitLength>(value: cutLength * self.engineConfig.material.board.size.width, unit: UnitLength.millimeters)
+            let aCut = self.normalized(width: cutLength, to: UnitLength.millimeters)
             self.report.append(instruction: "Cut \(aCut) from the right side.")
             self.report.append(instruction: "Put RIGHT cut in the row. Mark LEFT cut as \(left.mark).")
 
@@ -300,7 +300,7 @@ public class RowLayoutEngine {
 
                 // Step: Cut in two
                 self.report.add(instruction: "Take board marked as \(board.mark).")
-                let aCut = Measurement<UnitLength>(value: requiredLength * self.engineConfig.material.board.size.width, unit: UnitLength.millimeters)
+                let aCut = self.normalized(width: requiredLength, to: UnitLength.millimeters)
                 self.report.append(instruction: "Cut \(aCut) from the \(edge) side.")
                 self.report.append(instruction: "Mark LEFT cut as \(left.mark), and RIGHT cut as \(right.mark).")
 
@@ -323,6 +323,17 @@ public class RowLayoutEngine {
         if self.debug {
             print("Collect trash \(trash.width.round(6)), reuse: \(trash.reusable)")
         }
+    }
+
+    private func normalized(width cut: Double, to: UnitLength) -> String {
+        let aCut = Measurement<UnitLength>(value: cut * self.engineConfig.material.board.size.width, unit: UnitLength.millimeters)
+        let n = NumberFormatter()
+        n.maximumFractionDigits = 1
+        n.allowsFloats = true
+        let m = MeasurementFormatter()
+        m.numberFormatter = n
+        m.unitOptions = .providedUnit
+        return m.string(from: aCut)
     }
 }
 
