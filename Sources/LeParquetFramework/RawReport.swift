@@ -146,7 +146,7 @@ class RawReport {
         print("----------------------------------------------------", to: &ss)
         if let boardsPerPack = self.engineConfig.material.pack.boardsCount {
             print("++ Calculate using boards per pack: \(boardsPerPack)", to: &ss)
-            let packs = (self.boardsUsed / boardsPerPack).value + (self.boardsUsed % boardsPerPack == 0 ? 0.0 : 1.0)
+            let packs = Double(self.boardsUsed / Int(boardsPerPack.value)) + (self.boardsUsed % boardsPerPack == 0 ? 0.0 : 1.0)
             if packsRequired == nil {
                 packsRequired = packs
             } else {

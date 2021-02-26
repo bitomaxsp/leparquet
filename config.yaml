@@ -71,9 +71,13 @@ floor_choices:
        height: 187
        width: 2266
 
+     # Optional
      pack_area: 2.54
+     # Optional
      boards_per_pack: 6
      price_per_msq: 719
+     # Optional
+     pack_weight_kg: 22
 
   -
     type: "Timberwise"
