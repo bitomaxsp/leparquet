@@ -13,26 +13,26 @@ public final class LayoutProducer {
         }
     }
 
-    public func calculate() -> Report {
+    public func calculate() throws -> Report {
         let report = Report()
 
         if let idx = self.config.floorIndex {
             let floor = self.config.floorChoices[idx]
-            self.calculateRoom(for: floor, to: report)
+            try self.calculateRoom(for: floor, to: report)
         } else {
             for floor in self.config.floorChoices {
-                self.calculateRoom(for: floor, to: report)
+                try self.calculateRoom(for: floor, to: report)
             }
         }
 
         return report
     }
 
-    private func calculateRoom(for floor: Config.FloorConfig, to report: Report) {
+    private func calculateRoom(for floor: Config.Floor, to report: Report) throws {
         for room in self.config.rooms {
-            let input = LayoutEngineConfig(self.config, floor, room)
+            let input = try LayoutEngineConfig(self.config, floor, room)
             let engine = RowLayoutEngine(input, debug: self.debug)
-            let rawReport = engine.layout()
+            let rawReport = try engine.layout()
             report.add(rawReport)
         }
     }

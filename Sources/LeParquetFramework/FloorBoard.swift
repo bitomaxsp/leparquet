@@ -1,5 +1,12 @@
 import Foundation
 
+enum Edge: String, Codable {
+    case top
+    case left
+    case bottom
+    case right
+}
+
 enum VerticalEdge: CaseIterable {
     case left
     case right
@@ -8,6 +15,13 @@ enum VerticalEdge: CaseIterable {
 enum HorizontalEdge: CaseIterable {
     case top
     case bottom
+}
+
+struct Insets {
+    let top: Double
+    let left: Double
+    let bottom: Double
+    let right: Double
 }
 
 protocol Rect {
@@ -41,6 +55,8 @@ class ReusableBoard: Rect, Comparable {
     var height: Double { self.h }
     var area: Double { self.w * self.h }
     var mark: String { self.mark_ }
+    // TODO: If board has one of the corners cut out
+    var cornerCutOut: Bool = false
 
     func createLeft(width: Double, reuse: Bool) -> LeftCut {
         return LeftCut(width: width, height: self.height, reuse: reuse)

@@ -80,3 +80,16 @@ extension Measurement {
         return Measurement<UnitBoardsPerPack>(value: v.rounded(), unit: UnitBoardsPerPack.boards)
     }
 }
+
+extension Measurement {
+    func formatter(withFractionDigits digits: Int) -> MeasurementFormatter {
+        let numberFormatter = NumberFormatter()
+        numberFormatter.maximumFractionDigits = digits
+        numberFormatter.allowsFloats = true
+        numberFormatter.decimalSeparator = Locale.current.decimalSeparator
+        let m = MeasurementFormatter()
+        m.numberFormatter = numberFormatter
+        m.unitOptions = .providedUnit
+        return m
+    }
+}

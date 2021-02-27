@@ -43,10 +43,11 @@ public struct Config: Codable {
         var height = 0.0
     }
 
-    struct RoomConfig: Codable {
+    struct Room: Codable {
         enum CodingKeys: String, CodingKey {
             case name
             case size
+            case doors
             case heightClearance = "height_clearance"
             case lengthClearance = "length_clearance"
             case firstBoard = "first_board"
@@ -55,13 +56,41 @@ public struct Config: Codable {
             case desiredLastRowHeight = "desired_last_row_height"
         }
 
+        // Describe door position and size for the room
+        struct Door: Codable {
+            enum CodingKeys: String, CodingKey {
+                case edge
+                case size
+                case displacement
+            }
+
+            var size: Size
+            var edge: Edge
+            var displacement: Double
+        }
+
+        enum FirstBoard: String, CaseIterable, Codable {
+            case full
+            case one_3 = "1/3"
+            case two_3 = "2/3"
+
+            func lengthAsDouble() -> Double {
+                switch self {
+                case .full: return 1.0
+                case .one_3: return 1.0 / 3.0
+                case .two_3: return 2.0 / 3.0
+                }
+            }
+        }
+
         var name: String = ""
         var size: Size
-        // TODO: add enum decode
-        //        var first_board: FirstBoard = .one_3 // 1, 1/3, 2/3
-        // free joints
+
+        // TODO: free joints
         // regular joints
-        var firstBoard = ""
+        var firstBoard: FirstBoard = .full
+        // This might be optional
+        var doors: [Door]?
 
         var heightClearance: Double?
         var lengthClearance: Double?
@@ -70,9 +99,9 @@ public struct Config: Codable {
         var desiredLastRowHeight: Double?
     }
 
-    var rooms = [RoomConfig]()
+    var rooms = [Room]()
 
-    struct FloorConfig: Codable {
+    struct Floor: Codable {
         enum CodingKeys: String, CodingKey {
             case type
             case boardSize = "board_size"
@@ -93,9 +122,9 @@ public struct Config: Codable {
         var boardsPerPack: Int?
     }
 
-    var floorChoices = [FloorConfig]()
+    var floorChoices = [Floor]()
 
-    @frozen enum ValidationError: Error {
+    enum ValidationError: Error {
         case badFloorIndex(String)
     }
 

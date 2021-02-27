@@ -5,6 +5,7 @@ public class Report {
 
     func add(_ rawReport: RawReport) {
         print("Add report for \(rawReport.engineConfig.roomName) room with floor \(rawReport.engineConfig.floorName)")
+        rawReport.validate()
         self.reports.append(rawReport)
     }
 

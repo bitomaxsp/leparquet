@@ -4,30 +4,32 @@ class RawReport {
     typealias BoardStash = [ReusableBoard]
     typealias InstructionList = [String]
 
-    init(_ config: LayoutEngineConfig, normalizedWidth: Double) {
+    init(_ config: LayoutEngineConfig, normalizedBoardWidth: Double) {
         self.engineConfig = config
-        self.first_row_height = Double(config.material.board.size.height)
-        self.normalizedWidth = normalizedWidth
+        self.firstRowHeight = Double(config.material.board.size.height)
+        self.normalizedBoardWidth = normalizedBoardWidth
     }
 
-    let normalizedWidth: Double
+    let normalizedBoardWidth: Double
     let engineConfig: LayoutEngineConfig
+    var boardWidth: Double { return self.engineConfig.material.board.size.width }
     var boardHeight: Double { return self.engineConfig.material.board.size.height }
     var boardArea: Measurement<UnitArea> { return self.engineConfig.material.board.area }
     var roomSize: Config.Size { return self.engineConfig.effectiveRoomSize }
 
-    var first_row_height: Double
-    var last_row_height = 0.0
+    var firstRowHeight: Double
+    var lastRowHeight = 0.0
 
     private var rows = [BoardStash]()
     // This is pure trash, middle cuts mostly
     private var trashCuts = BoardStash()
     private var instructions = InstructionList()
     private var boardsUsed = 0
+    private var doors = [LayoutEngineConfig.Door]()
 
-    var unused_height_on_first_row: Double = 0.0
-    var unused_height_on_last_row: Double = 0.0
-    var total_rows = 0
+    var unusedHeightInFirstRow: Double = 0.0
+    var unusedHeightInLastRow: Double = 0.0
+    var totalRows = 0
     var boardNumWithMargin = 0
 
     // MARK: Implementation
@@ -44,11 +46,17 @@ class RawReport {
         defer {
             self.boardsUsed += 1
         }
-        return FloorBoard(width: self.normalizedWidth, height: self.boardHeight)
+        return FloorBoard(width: self.normalizedBoardWidth, height: self.boardHeight)
     }
 
     func add(instruction: String) {
         self.instructions.append(instruction)
+    }
+
+    /// Add covered door to report
+    /// - Parameter door: Covered door
+    func add(door: LayoutEngineConfig.Door) {
+        self.doors.append(door)
     }
 
     func append(instruction: String) {
@@ -69,32 +77,55 @@ class RawReport {
         self.trashCuts.sort()
     }
 
+    func validate() {
+        // Sum of each row must be equal to effective room width + clearance + side doors rect height
+        var summed = [Double](repeating: 0.0, count: self.rows.count)
+        for i in 0 ..< self.rows.count {
+            summed[i] = self.rows[i].reduce(0.0) { (next, b) in
+                return next + b.width
+            }
+        }
+
+        let summedReal = summed.map {
+            ($0 * self.boardWidth).round(3, "f")
+        }
+        print(summedReal)
+
+        let inset = self.engineConfig.insets.left + self.engineConfig.insets.right
+        for i in 0 ..< summed.count {
+            let width = summed[i] * self.boardWidth + inset
+            if !width.rounded().eq(self.engineConfig.actualRoomSize.width) {
+                print("Sanity check not passed for row [\(i)]: \(width.rounded()) != \(self.engineConfig.actualRoomSize.width)")
+            }
+        }
+    }
+
     func output() -> String {
         var ss = ""
 
         // TODO: support backward layout
         print("NOTE: Layout is done from left ro right, from top to bottom", to: &ss)
 
-        print("Total rows: \(self.total_rows)", to: &ss)
-        print("First row height: \(self.first_row_height)mm", to: &ss)
+        print("Total rows: \(self.totalRows)", to: &ss)
+        print("First row height: \(self.firstRowHeight)mm", to: &ss)
         print("Middle height: \(self.boardHeight)mm", to: &ss)
-        print("Last row height: \(self.last_row_height)mm", to: &ss)
+        print("Last row height: \(self.lastRowHeight)mm", to: &ss)
 
-        var total_height = self.first_row_height + self.boardHeight * Double(self.total_rows) + self.last_row_height
+        var total_height = self.firstRowHeight + self.boardHeight * Double(self.totalRows) + self.lastRowHeight
         var N = 0.0
-        if self.first_row_height > 0.0 {
+        if self.firstRowHeight > 0.0 {
             total_height -= self.boardHeight
             N += 1
         }
-        if self.last_row_height > 0.0 {
+        if self.lastRowHeight > 0.0 {
             total_height -= self.boardHeight
             N += 1
         }
 
-        print("Total height: \(self.first_row_height) + \(self.boardHeight)*\(Double(self.total_rows) - N) + \(self.last_row_height) = \(total_height)mm", to: &ss)
+        print("Total height: \(self.firstRowHeight) + \(self.boardHeight)*\(Double(self.totalRows) - N) + \(self.lastRowHeight) = \(total_height)mm", to: &ss)
         print("(Remember, you need to add both side clearance)", to: &ss)
-        print("Unused height from first row: \(self.unused_height_on_first_row)mm (cut width: \(self.engineConfig.lonToolCutWidth)mm)", to: &ss)
-        print("Unused height from last row: \(self.unused_height_on_last_row)mm (cut width: \(self.engineConfig.lonToolCutWidth)mm)", to: &ss)
+        print("Unused height from first row: \(self.unusedHeightInFirstRow)mm (cut width: \(self.engineConfig.lonToolCutWidth)mm)", to: &ss)
+        print("Unused height from last row: \(self.unusedHeightInLastRow)mm (cut width: \(self.engineConfig.lonToolCutWidth)mm)", to: &ss)
 
         self.printRows(to: &ss)
         self.printRows(to: &ss, self.engineConfig.material.board.size.width)
@@ -106,7 +137,7 @@ class RawReport {
         let unused_area = self.boardArea * restWidthSummed
         print("Unusable side trash area: \(unused_area.format(convertedTo: .squareMeters))", to: &ss)
 
-        let sideCutTrash = Measurement<UnitArea>(value: (Double(self.total_rows) * self.boardHeight - self.roomSize.height) * self.roomSize.width,
+        let sideCutTrash = Measurement<UnitArea>(value: (Double(self.totalRows) * self.boardHeight - self.roomSize.height) * self.roomSize.width,
                                                  unit: UnitArea.squareMillimeters)
         let totalTrash = unused_area + sideCutTrash
 
@@ -118,7 +149,7 @@ class RawReport {
         print("Total buy area as [boards * boardArea]: \(totalBoardsArea.format(convertedTo: .squareMeters))", to: &ss)
         print("Total buy area - total trash area: \((totalBoardsArea - totalTrash).format(convertedTo: .squareMeters))", to: &ss)
 
-        if let price = self.engineConfig.material.pricePerM2 {
+        if let price = self.engineConfig.material.pack.pricePerM2 {
             print("Total price (using total area): \((price * totalBoardsArea.converted(to: .squareMeters).value).rounded())", to: &ss)
         } else {
             print("", to: &ss)
@@ -162,7 +193,7 @@ class RawReport {
             print("----------------------------------------------------", to: &ss)
         }
 
-        if let weight = self.engineConfig.material.packWeight {
+        if let weight = self.engineConfig.material.pack.weight {
             if let p = packsRequired {
                 print("Total weight: \(weight.converted(to: .kilograms) * p)", to: &ss)
             }
@@ -194,7 +225,8 @@ class RawReport {
         let flavor = mul > 1.0 ? "real" : "nomalized"
         print("\nLayout [\(flavor)]:", to: &ss)
 
-        for r in self.rows {
+        for i in 0 ..< self.rows.count {
+            let r = self.rows[i]
             let arr = r.map { (_ b: ReusableBoard) -> String in
                 if mul == 1.0 {
                     return (b.width * mul).round(4)
@@ -204,7 +236,7 @@ class RawReport {
                 }
             }
 
-            print(arr, to: &ss)
+            print("Row #\(i): \(arr)", to: &ss)
         }
 
         let rests = self.trashCuts.map { (_ b: ReusableBoard) -> String in
@@ -217,18 +249,5 @@ class RawReport {
         }
 
         print("\nUnusable rests [\(flavor)]: \(rests)", to: &ss)
-    }
-}
-
-extension Measurement {
-    func formatter(withFractionDigits digits: Int) -> MeasurementFormatter {
-        let numberFormatter = NumberFormatter()
-        numberFormatter.maximumFractionDigits = digits
-        numberFormatter.allowsFloats = true
-        numberFormatter.decimalSeparator = Locale.current.decimalSeparator
-        let m = MeasurementFormatter()
-        m.numberFormatter = numberFormatter
-        m.unitOptions = .providedUnit
-        return m
     }
 }

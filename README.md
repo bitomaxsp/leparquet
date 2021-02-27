@@ -17,10 +17,20 @@ You know what to do.
 
 Hint: `swiftformat . && swift run leparquet deck --verbose config.yaml`
 
-## Contributions
+## Taking room measurements
+
+### Door rectangles measurements
+
+### Cutout areas measurements
+
+## Frames and origins
+
+## Layout direction
+
+# Contributions
 
 They are welcome. Feel free to submit a PR
 
-### Disclaimer
+# Disclaimer
 
 Certainly, you use it at your own risk
