@@ -64,18 +64,18 @@ rooms:
         size:
           height: 50
           width: 500
-
-      # - edge: top # left, right, top, bottom
-      #   displacement: 70 # (0, 0) top, left
-      #   size:
-      #     height: 40
-      #     width: 900
-
-      # - edge: bottom # left, right, top, bottom
-      #   displacement: 2830 # (0, 0) top, left
-      #   size:
-      #     height: 140
-      #     width: 900
+    
+      - edge: top # left, right, top, bottom
+        displacement: 70 # (0, 0) top, left
+        size:
+          height: 40
+          width: 900
+          
+      - edge: bottom # left, right, top, bottom
+        displacement: 2830 # (0, 0) top, left
+        size:
+          height: 140
+          width: 900
 
 
   # - name: "big"

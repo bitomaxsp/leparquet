@@ -86,7 +86,7 @@ class RawReport {
             }
 
             // summed[i] has total row width. We remove doors and clearance (included in the door height)
-//            let doorsHeight = self.doorHeight(alongEdges: [.left, .right])
+//            let doorsHeight = self.doorsHeight(alongEdges: [.left, .right], forRow: i)
         }
 
         let summedReal = summed.map {

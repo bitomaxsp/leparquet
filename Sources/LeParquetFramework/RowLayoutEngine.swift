@@ -136,11 +136,15 @@ public class RowLayoutEngine {
                 // Look left doors to account left cut length
                 let boardProtrusion = try self.normalizedProtrusion(forEdge: .left, andRow: rowIndex)
                 leftCutAmount = maximumLeftProtrusion - boardProtrusion
-                print("boardProtrusion:\(boardProtrusion.round(4))[\((boardProtrusion * boardWidth).round(4))], leftCutAmount:\(leftCutAmount.round(4)), leftCutAmount:\(leftCutAmount * boardWidth)")
+                if self.debug {
+                    print("boardProtrusion:\(boardProtrusion.round(4))[\((boardProtrusion * boardWidth).round(4))], leftCutAmount:\(leftCutAmount.round(4))[\(leftCutAmount * boardWidth)]")
+                }
 
                 // If there is not door we need shorted boards by the amount of max protrusion
                 cutLength -= leftCutAmount
-                print("Reduce cutLength \(cutLength) by \(leftCutAmount)")
+                if self.debug {
+                    print("Reduce cutLength \(cutLength.round(4)) by \(leftCutAmount.round(4))")
+                }
             }
 
             // First board used from LEFT stash
@@ -376,8 +380,9 @@ public class RowLayoutEngine {
         }) {
             let door = self.doors[edge]![idx]
             assert(door.edge == edge)
-            print(">>>>>>> Found left door: \(Double(door.frame.size.height) * self.engineConfig.material.board.size.width)")
-
+            if self.debug {
+                print("Found \(edge) door: \(Double(door.frame.size.height) * self.engineConfig.material.board.size.width)")
+            }
             return Double(door.frame.size.height)
         }
 
@@ -389,12 +394,14 @@ public class RowLayoutEngine {
     private func coverHorizontalDoors() {
         // Check that largest (in height) door rect is less than first row: We cover!
         // Note arrays are sorted from ASC
-        self.coverDoorsAlong(edge: .top, using: self.report.unusedHeightInFirstRow)
-        self.coverDoorsAlong(edge: .bottom, using: self.report.unusedHeightInLastRow)
+        let boardHeight = self.engineConfig.material.board.size.height
+        self.coverDoorsAlong(edge: .top, usingNormalizedRest: self.report.unusedHeightInFirstRow / boardHeight)
+        self.coverDoorsAlong(edge: .bottom, usingNormalizedRest: self.report.unusedHeightInLastRow / boardHeight)
     }
 
-    private func coverDoorsAlong(edge: Edge, using rest: Double) {
+    private func coverDoorsAlong(edge: Edge, usingNormalizedRest rest: Double) {
         precondition(edge == .bottom || edge == .top, "Edge must top or bottom")
+        precondition(rest >= 0.0 && rest < 1.0, "Rest is not normalized: \(rest)")
 
         if let e = self.doors[edge] {
             if let last = e.last {
