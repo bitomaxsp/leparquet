@@ -78,12 +78,15 @@ class RawReport {
     }
 
     func validate() {
-        // Sum of each row must be equal to effective room width + clearance + side doors rect height
+        // Sum of each row must be equal to effective room width + clearance (included in the door height) + side doors rect height
         var summed = [Double](repeating: 0.0, count: self.rows.count)
         for i in 0 ..< self.rows.count {
             summed[i] = self.rows[i].reduce(0.0) { (next, b) in
                 return next + b.width
             }
+
+            // summed[i] has total row width. We remove doors and clearance (included in the door height)
+//            let doorsHeight = self.doorHeight(alongEdges: [.left, .right])
         }
 
         let summedReal = summed.map {

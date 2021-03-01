@@ -335,7 +335,7 @@ public class RowLayoutEngine {
                     return board
                 }
 
-                let edge: VerticalEdge = T.self == LeftCut.self ? .left : .right
+                let edge: Edge = T.self == LeftCut.self ? .left : .right
 
                 let (left, right) = board.cutAlongWidth(atDistance: cutLength, from: edge, cutWidth: self.engineConfig.normalizedLatToolCutWidth)
 
