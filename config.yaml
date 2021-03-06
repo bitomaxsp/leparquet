@@ -74,7 +74,7 @@ rooms:
       - edge: bottom # left, right, top, bottom
         displacement: 2830 # (0, 0) top, left
         size:
-          height: 140
+          height: 190
           width: 900
 
 
@@ -85,8 +85,8 @@ rooms:
 
   #   first_board: "1/3" # "full", "1/3", "2/3"
 
-    # height_clearance
-    # length_clearance
+#    height_clearance: 200
+#    length_clearance: 300
     # min_last_row_height: 60.0
     # desired_last_row_height: 100.0
     # cover_margin: 0.05

@@ -1,5 +1,8 @@
 import Foundation
 
+let maxToolCutWidth_mm = 5.0
+let maxClearance_mm = 30.0
+
 struct LayoutEngineConfig {
     typealias Size = Config.Size
 
@@ -118,6 +121,11 @@ struct LayoutEngineConfig {
                 if self.doors![d.edge] == nil {
                     self.doors?.updateValue([Door](), forKey: d.edge)
                 }
+
+                if d.size.height > self.material.board.size.height {
+                    throw Errors.validationFailed("Door rectangle height must be <= board height. Got: \(d.size.height) > \(self.material.board.size.height)")
+                }
+
                 // NOTE: For doors along horizontal edges we normalize displacement and width to board width, height to board height
                 // NOTE: For doors along vertical edges we normalize displacement and width to board height, height to board width
                 let kPositionNorm = (d.edge == .top || d.edge == .bottom) ? 1.0 / self.material.board.size.width : 1.0 / self.material.board.size.height
@@ -148,23 +156,30 @@ struct LayoutEngineConfig {
         }
 
         self.maxNormalizedLeftProtrusion = maxLeft
-
-        try self.validate()
+        try self.validate(config, floor, room)
     }
 
-    private func validate() throws {
-        // TODO: tool cut with limit 5mm.
-        // cleareance 30mm
-        // TODO: check doors for intersections
-        if let ddoors = self.doors {
-            for (_, v) in ddoors {
-                // We check that hight of the door rect is <= board height
-                for d in v {
-                    if d.frame.size.height > self.material.board.size.height {
-                        throw Errors.validationFailed("Dorr rectangle height must be <= board height. Got: \(d.frame.size.height) > \(self.material.board.size.height)")
-                    }
-                }
-            }
+    private func validate(_ config: Config, _: Config.Floor, _ room: Config.Room) throws {
+        // tool cut with limit 5mm.
+        if config.latToolCutWidth > maxToolCutWidth_mm {
+            throw Errors.validationFailed("latToolCutWidth [\(config.latToolCutWidth)] <= \(maxToolCutWidth_mm)mm")
+        }
+        if config.lonToolCutWidth > maxToolCutWidth_mm {
+            throw Errors.validationFailed("lonToolCutWidth [\(config.lonToolCutWidth)] <= \(maxToolCutWidth_mm)mm")
+        }
+
+        if let hc = room.heightClearance, hc > maxClearance_mm {
+            throw Errors.validationFailed("Room height clearance [\(hc)] must be <= \(maxClearance_mm)mm")
+        }
+        if let lc = room.lengthClearance, lc > maxClearance_mm {
+            throw Errors.validationFailed("Room length clearance [\(lc)] must be <= \(maxClearance_mm)mm")
+        }
+
+        if config.heightClearance > maxClearance_mm {
+            throw Errors.validationFailed("Global height clearance [\(config.heightClearance)] must be <= \(maxClearance_mm)mm")
+        }
+        if config.lengthClearance > maxClearance_mm {
+            throw Errors.validationFailed("Global length clearance [\(config.lengthClearance)] must be <= \(maxClearance_mm)mm")
         }
     }
 }

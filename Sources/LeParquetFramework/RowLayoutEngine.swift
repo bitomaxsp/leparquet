@@ -400,6 +400,7 @@ public class RowLayoutEngine {
     }
 
     private func coverHorizontalDoorsUsingRests() {
+        print("Trying to cover top and bottom door passages")
         // Sort: DESC
         self.reusableRight.sort(by: >)
         self.reusableLeft.sort(by: >)
@@ -408,28 +409,35 @@ public class RowLayoutEngine {
 
         self.coverDoorPassage(atEdge: .top)
         self.coverDoorPassage(atEdge: .bottom)
+
+        if let e = self.doors[.top] {
+            precondition(e.isEmpty, "All top doors must be coverd")
+        }
+        if let e = self.doors[.bottom] {
+            precondition(e.isEmpty, "All bottom doors must be coverd")
+        }
     }
 
     private func coverDoorPassage(atEdge edge: Edge) {
         while let doorWidth = maxDoorWidth(forEdge: edge), !doorWidth.isZero {
-            let board = self.findBoardCutForDoor(withNormalizedWidth: doorWidth)
+            let board = self.findBoardCutForDoor(withNormalizedWidth: doorWidth, edge: edge)
             self.coverDoorsAlong(edge: edge, usingNormalizedWidthRest: board.width)
             // TODO: check passage height
             // TODO: save board
         }
     }
 
-    private func findBoardCutForDoor(withNormalizedWidth width: Double) -> ReusableBoard {
+    private func findBoardCutForDoor(withNormalizedWidth width: Double, edge: Edge) -> ReusableBoard {
         if let cut = self.reusableRight.first {
             if cut.width >= width {
-                print("Found cut: \(cut), for bottom edge")
+                print("Found cut: \(cut), for \(edge) edge")
                 return self.reusableRight.removeFirst()
             }
         }
 
         if let cut = self.reusableLeft.first {
             if cut.width >= width {
-                print("Found cut: \(cut), for bottom edge")
+                print("Found cut: \(cut), for \(edge) edge")
                 return self.reusableLeft.removeFirst()
             }
         }
@@ -480,7 +488,7 @@ public class RowLayoutEngine {
         if let e = self.doors[edge], let last = e.last {
             // Unused part can be used to cover door passage
             if last.frame.size.width <= rest {
-                print("Can cover \(edge) door using \(rest) rest")
+                print("Can cover \(edge) door using \(rest.round(4)) rest")
 
                 self.report.add(door: self.doors[edge]!.removeLast())
             } else {
