@@ -85,7 +85,7 @@ rooms:
         displacement: 200 # (0, 0) top, left
         name: door5
         size:
-          height: 0
+          height: 35
           width: 900
 
 

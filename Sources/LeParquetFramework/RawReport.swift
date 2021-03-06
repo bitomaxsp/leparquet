@@ -118,7 +118,7 @@ class RawReport {
             let calcWidth = self.engineConfig.actualRoomSize.width + inset
 
             if !rowWidth.nearlyEq(calcWidth) {
-                print("Sanity check not passed for row [\(i)]: rowWidth:\(rowWidth) != checkWidth:\(calcWidth)")
+                print("Sanity check not passed for row [\(i)]: rowWidth:\(rowWidth.round(4)) != checkWidth:\(calcWidth)")
             }
         }
     }

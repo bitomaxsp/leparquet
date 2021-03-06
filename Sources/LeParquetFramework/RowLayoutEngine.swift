@@ -129,15 +129,15 @@ public class RowLayoutEngine {
             var leftCutAmount = 0.0
             if maximumLeftProtrusion > 0.0 {
                 // Look left doors to account left cut length
-                let (boardProtrusion, door) = self.normalizedProtrusion(forEdge: .left, andRow: rowIndex)
-                self.report.add(protrusion: boardProtrusion, forEdge: .left, inRow: rowIndex)
+                let (leftProtrusion, door) = self.normalizedProtrusion(forEdge: .left, andRow: rowIndex)
+                self.report.add(protrusion: leftProtrusion, forEdge: .left, inRow: rowIndex)
                 if let door = door {
                     self.report.add(door: door)
                 }
 
-                leftCutAmount = maximumLeftProtrusion - boardProtrusion
-                if self.debug {
-                    print("boardProtrusion:\(boardProtrusion.round(4))[\((boardProtrusion * boardWidth).round(4))], leftCutAmount:\(leftCutAmount.round(4))[\(leftCutAmount * boardWidth)]")
+                leftCutAmount = maximumLeftProtrusion - leftProtrusion
+                if self.debug, leftProtrusion > 0.0 {
+                    print("leftProtrusion:\(leftProtrusion.round(4))[\((leftProtrusion * boardWidth).round(4))], leftCutAmount:\(leftCutAmount.round(4))[\(leftCutAmount * boardWidth)]")
                 }
 
                 // If there is not door we need shorted boards by the amount of max protrusion
@@ -168,9 +168,21 @@ public class RowLayoutEngine {
             // Use whole board if we in the middle
             cutLength = Self.normalizedWholeStep
 
-            // Make row shorted by the amount of cut if needed
-            // If there is no door the first board is shorted and row also shorter
-            let reducedNormalizedRoomWidth = normalizedRoomWidth - leftCutAmount
+            // Look right doors to account right cut length
+            let (rightProtrusion, door) = self.normalizedProtrusion(forEdge: .right, andRow: rowIndex)
+            self.report.add(protrusion: rightProtrusion, forEdge: .right, inRow: rowIndex)
+            if let door = door {
+                self.report.add(door: door)
+            }
+
+            // TODO: debug right protrusion
+            if self.debug, rightProtrusion > 0.0 {
+                print("rightProtrusion:\(rightProtrusion.round(4))[\((rightProtrusion * boardWidth).round(4))]")
+            }
+
+            // Make row shorter by the amount of cut
+            // Add right protrusion to account it in row length
+            let reducedNormalizedRoomWidth = normalizedRoomWidth - leftCutAmount + rightProtrusion
             while rowCovered < reducedNormalizedRoomWidth {
                 board = nil
                 cutLength = min(Self.normalizedWholeStep, Double(reducedNormalizedRoomWidth - rowCovered))
@@ -184,16 +196,6 @@ public class RowLayoutEngine {
                     self.report.add(instruction: "Take new board from the pack. Put in the row.")
 
                 } else if cutLength < Self.normalizedWholeStep {
-                    // Look right doors to account right cut length
-                    let (boardProtrusion, door) = self.normalizedProtrusion(forEdge: .right, andRow: rowIndex)
-                    self.report.add(protrusion: boardProtrusion, forEdge: .right, inRow: rowIndex)
-                    if let door = door {
-                        self.report.add(door: door)
-                    }
-
-                    // TODO: debug right protrusion
-//                    print("Right boardProtrusion:\(boardProtrusion.round(4))[\((boardProtrusion * boardWidth).round(4))]")
-
                     board = self.useBoardFromRightStash(cutLength)
                     // Right reused from stash if we have it with required length
                     if board == nil {
@@ -421,8 +423,6 @@ public class RowLayoutEngine {
         // Sort: DESC
         self.reusableRight.sort(by: >)
         self.reusableLeft.sort(by: >)
-        print(self.reusableRight)
-        print(self.reusableLeft)
 
         self.coverDoorPassage(atEdge: .top)
         self.coverDoorPassage(atEdge: .bottom)
