@@ -14,7 +14,7 @@ public class RowLayoutEngine {
     // NOTE: Reusable right cut can only be used on left side, and vise versa
     private var reusableLeft = StashOfRights()
     private var reusableRight = StashOfLefts()
-    private var doors = [Edge: [LayoutEngineConfig.Door]]()
+    private var doors = [Edge: [Door]]()
 
     init(_ input: LayoutEngineConfig, debug: Bool) {
         self.engineConfig = input
@@ -43,6 +43,9 @@ public class RowLayoutEngine {
             print(self.report.output())
         }
 
+        for (_, v) in self.doors {
+            precondition(v.isEmpty, "All dors must be processed")
+        }
         return self.report
     }
 
@@ -95,9 +98,7 @@ public class RowLayoutEngine {
 
     private func normalizedWidthCalculation() throws {
         let boardWidth = self.engineConfig.material.board.size.width
-
         let startLength = self.engineConfig.firstBoard.lengthAsDouble()
-
         var cutLength: Double = startLength
 
         /*
@@ -128,8 +129,11 @@ public class RowLayoutEngine {
             var leftCutAmount = 0.0
             if maximumLeftProtrusion > 0.0 {
                 // Look left doors to account left cut length
-                let boardProtrusion = self.normalizedProtrusion(forEdge: .left, andRow: rowIndex)
+                let (boardProtrusion, door) = self.normalizedProtrusion(forEdge: .left, andRow: rowIndex)
                 self.report.add(protrusion: boardProtrusion, forEdge: .left, inRow: rowIndex)
+                if let door = door {
+                    self.report.add(door: door)
+                }
 
                 leftCutAmount = maximumLeftProtrusion - boardProtrusion
                 if self.debug {
@@ -181,9 +185,13 @@ public class RowLayoutEngine {
 
                 } else if cutLength < Self.normalizedWholeStep {
                     // Look right doors to account right cut length
-                    let boardProtrusion = self.normalizedProtrusion(forEdge: .right, andRow: rowIndex)
+                    let (boardProtrusion, door) = self.normalizedProtrusion(forEdge: .right, andRow: rowIndex)
                     self.report.add(protrusion: boardProtrusion, forEdge: .right, inRow: rowIndex)
+                    if let door = door {
+                        self.report.add(door: door)
+                    }
 
+                    // TODO: debug right protrusion
 //                    print("Right boardProtrusion:\(boardProtrusion.round(4))[\((boardProtrusion * boardWidth).round(4))]")
 
                     board = self.useBoardFromRightStash(cutLength)
@@ -369,13 +377,13 @@ public class RowLayoutEngine {
 
     /// Return board length protrusion for the door adjacent to edge
     /// - Parameter edge: target edge to which door belongs
-    /// - Returns: relative amount of protrusion in the direction of an edge, or 0 if no protrusion needed
-    func normalizedProtrusion(forEdge edge: Edge, andRow rowIndex: Int) -> Double {
+    /// - Returns: relative amount of protrusion in the direction of an edge, or 0 if no protrusion needed. Door if door is coverd
+    func normalizedProtrusion(forEdge edge: Edge, andRow rowIndex: Int) -> (Double, Door?) {
         if let idx = self.doors[edge]?.firstIndex(where: { (door) -> Bool in
             // TODO: Make position along edge
-
             // highest coord in the direction lateral to covering must be in doors range
-            let currRange = Double(rowIndex) ..< (Double(rowIndex) + 1.0).nextUp
+            let currRange = Double(rowIndex) ... Double(rowIndex + 1)
+
             return door.longRange.overlaps(currRange)
         }) {
             let door = self.doors[edge]![idx]
@@ -383,10 +391,19 @@ public class RowLayoutEngine {
             if self.debug {
                 print("Found \(edge) door: \(Double(door.frame.size.height) * self.engineConfig.material.board.size.width)")
             }
-            return Double(door.frame.size.height)
+
+            var retDoor: Door?
+            // Get rande for the next row to see we this row is the last one
+            let nextRange = Double(rowIndex + 1) ... Double(rowIndex + 2)
+            if !nextRange.overlaps(door.longRange) {
+                print(">>>>>>>>>>>>>>>>>>>> rowIndex:\(rowIndex) is last for door: \(door.name)")
+                retDoor = self.doors[edge]!.remove(at: idx)
+            }
+
+            return (door.frame.size.height.native, retDoor)
         }
 
-        return 0.0
+        return (0.0, nil)
     }
 
     /// Try to figure our if doors along top and bottom edges can be covered from rests
@@ -418,19 +435,34 @@ public class RowLayoutEngine {
         }
     }
 
+    /// Cover top and bottom when need boards from rst or new one
+    /// - Parameter edge: Top or Bottom
     private func coverDoorPassage(atEdge edge: Edge) {
-        while let doorWidth = maxDoorWidth(forEdge: edge), !doorWidth.isZero {
+        precondition(edge.isHorizontal(), "Edge must top or bottom")
+        while let door = self.doorWidthMaxWidth(forEdge: edge), !door.frame.size.width.isZero {
+            let doorWidth = Double(door.frame.size.width)
+
+            self.report.add(instruction: "Start door along \(edge), named: \(door.name), width: \(doorWidth * self.report.boardWidth)")
+
             let board = self.findBoardCutForDoor(withNormalizedWidth: doorWidth, edge: edge)
-            self.coverDoorsAlong(edge: edge, usingNormalizedWidthRest: board.width)
+            if self.coverDoorsAlong(edge: edge, usingNormalizedWidthRest: board.width) {
+                self.report.add(instruction: "Use cut marked \(board.mark) to cover the door width \(doorWidth * self.report.boardWidth) passage.")
+            }
             // TODO: check passage height
             // TODO: save board
         }
     }
 
+    /// Find board cut in one of 2 stashes or take a new one
+    /// - Parameters:
+    ///   - width: Normalized required width for the board
+    ///   - edge: Which esdge
+    /// - Returns: Found board
     private func findBoardCutForDoor(withNormalizedWidth width: Double, edge: Edge) -> ReusableBoard {
         if let cut = self.reusableRight.first {
             if cut.width >= width {
                 print("Found cut: \(cut), for \(edge) edge")
+                self.report.add(instruction: "To cover door [???], take the cut marked as \(cut.mark) from right stash.")
                 return self.reusableRight.removeFirst()
             }
         }
@@ -438,31 +470,45 @@ public class RowLayoutEngine {
         if let cut = self.reusableLeft.first {
             if cut.width >= width {
                 print("Found cut: \(cut), for \(edge) edge")
+                self.report.add(instruction: "To cover door [???], take the cut marked as \(cut.mark) from left stash.")
                 return self.reusableLeft.removeFirst()
             }
         }
 
         let board = self.report.newBoard()
+        self.report.add(instruction: "To cover door [???], take new board from the pack.")
+
         let pikeWidth = 10.0 / self.report.boardWidth
 
         let (left, right) = board.cutAlongWidth(atDistance: pikeWidth, from: .left, cutWidth: self.engineConfig.normalizedLatToolCutWidth)
+        self.report.append(instruction: "Measure \(pikeWidth) from the left side and cut it out. Trash left cut. Take the right cut.")
         self.report.add(trash: left)
 
         let (left1, right1) = right.cutAlongWidth(atDistance: width, from: .left, cutWidth: self.engineConfig.normalizedLatToolCutWidth)
+        self.report.append(instruction: "Measure \(width) from the left side and cut it out.")
+        self.report.append(instruction: "Mark the right cut with \(right1.mark) and stash it to use later")
+
         self.stash(right: right1)
 
         return left1
     }
 
-    private func maxDoorWidth(forEdge edge: Edge) -> Double? {
+    /// Finds the dor with maximum width
+    /// - Parameter edge: Which edge to inspect
+    /// - Returns: Door or nothing
+    private func doorWidthMaxWidth(forEdge edge: Edge) -> Door? {
         if let e = self.doors[edge], let last = e.last {
-            return Double(last.frame.size.width)
+            return last
         }
         return nil
     }
 
+    /// Cover door along top or bottom using longitudinal rest cuts
+    /// - Parameters:
+    ///   - edge: top or bottom
+    ///   - rest: normalized rest height
     private func coverDoorsAlong(edge: Edge, usingNormalizedHeightRest rest: Double) {
-        precondition(edge == .bottom || edge == .top, "Edge must top or bottom")
+        precondition(edge.isHorizontal(), "Edge must top or bottom")
         precondition(rest >= 0.0 && rest < 1.0, "Rest is not normalized: \(rest)")
 
         if let e = self.doors[edge], let last = e.last {
@@ -481,8 +527,13 @@ public class RowLayoutEngine {
         }
     }
 
-    private func coverDoorsAlong(edge: Edge, usingNormalizedWidthRest rest: Double) {
-        precondition(edge == .bottom || edge == .top, "Edge must top or bottom")
+    /// Cover door along top or bottom using stashed or new boards
+    /// - Parameters:
+    ///   - edge: top or bottom
+    ///   - rest: rest width
+    /// - Returns: If door was covered
+    private func coverDoorsAlong(edge: Edge, usingNormalizedWidthRest rest: Double) -> Bool {
+        precondition(edge.isHorizontal(), "Edge must top or bottom")
         precondition(rest >= 0.0 && rest < 1.0, "Rest is not normalized: \(rest)")
 
         if let e = self.doors[edge], let last = e.last {
@@ -491,11 +542,13 @@ public class RowLayoutEngine {
                 print("Can cover \(edge) door using \(rest.round(4)) rest")
 
                 self.report.add(door: self.doors[edge]!.removeLast())
+                return true
             } else {
                 // Larges door can't be covered, so we for simplicity fallback to cover from whole boards
                 print("ERROR: Couldn't cover door (\(last) using \(rest) rest. This is probably a bug.")
             }
         }
+        return false
     }
 
     private func normalized(width cut: Double, to newUnit: UnitLength) -> String {

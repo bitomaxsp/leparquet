@@ -25,7 +25,7 @@ class RawReport {
     private var trashCuts = BoardStash()
     private var instructions = InstructionList()
     private var boardsUsed = 0
-    private var doors = [LayoutEngineConfig.Door]()
+    private var doors = [Door]()
     // Amount of boad added in eash row due to the possible doors. Normalized
     private var expansions = [Edge: [Double]]()
 
@@ -66,7 +66,7 @@ class RawReport {
 
     /// Add covered door to report
     /// - Parameter door: Covered door
-    func add(door: LayoutEngineConfig.Door) {
+    func add(door: Door) {
         self.doors.append(door)
     }
 
@@ -102,10 +102,10 @@ class RawReport {
             }
         }
 
-//        let summedReal = summed.map {
-//            ($0 * self.boardWidth).round(3, "f")
-//        }
-//        print(summedReal)
+        let summedReal = summed.map {
+            ($0 * self.boardWidth).round(3, "f")
+        }
+        print("Each row length (including side doors, no clearance if no door): \(summedReal)")
 
         // Check is based on prior knowledge about room size, clearance and doors used for layout
         // Thus we make sure we have independent check from how algorithm does layout
@@ -222,6 +222,10 @@ class RawReport {
             }
         } else {
             print("", to: &ss)
+        }
+
+        for d in self.doors {
+            print(d, to: &ss)
         }
 
         print("\n----------- THEORY DATA -----------", to: &ss)

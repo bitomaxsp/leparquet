@@ -55,26 +55,37 @@ rooms:
     doors:
       - edge: left # left, right, top, bottom
         displacement: 170 # (0, 0) top, left
+        name: door1
         size:
           height: 35
           width: 900
 
       - edge: left # left, right, top, bottom
         displacement: 1270 # (0, 0) top, left, is from the wall
+        name: door2
         size:
           height: 50
           width: 500
     
       - edge: top # left, right, top, bottom
         displacement: 70 # (0, 0) top, left
+        name: door3
         size:
           height: 40
           width: 900
           
       - edge: bottom # left, right, top, bottom
         displacement: 2830 # (0, 0) top, left
+        name: door4
         size:
-          height: 190
+          height: 180
+          width: 900
+
+      - edge: right # left, right, top, bottom
+        displacement: 200 # (0, 0) top, left
+        name: door5
+        size:
+          height: 0
           width: 900
 
 

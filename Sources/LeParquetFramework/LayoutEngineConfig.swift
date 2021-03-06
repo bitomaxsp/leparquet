@@ -44,21 +44,6 @@ struct LayoutEngineConfig {
         let notes: String?
     }
 
-    // Door in the room need to be taken into account
-    struct Door {
-        /// Edge which door rect is in
-        let edge: Edge
-        /// door frame. y coord always 0 as door protrudes covering floor rectangle
-        let frame: CGRect
-        /// if frame values are normalized wrt board dimentions
-        /// width (longest dimension) normalized to board width for top and bottom doors
-        /// height (shortest dimension) normalized to board height for top and bottom doors
-        /// and for left and right it's wice versa
-        let nomalized: Bool
-        /// Normalized range covered by board along longest dimention. See nomalized for normalization notes.
-        let longRange: Range<Double>
-    }
-
     let roomName: String
     let floorName: String
     let actualRoomSize: Size
@@ -126,23 +111,26 @@ struct LayoutEngineConfig {
                     throw Errors.validationFailed("Door rectangle height must be <= board height. Got: \(d.size.height) > \(self.material.board.size.height)")
                 }
 
+                if d.size.height.isZero || d.size.width.isZero {
+                    throw Errors.validationFailed("Door \(d.name) size must not be zero")
+                }
+
                 // NOTE: For doors along horizontal edges we normalize displacement and width to board width, height to board height
                 // NOTE: For doors along vertical edges we normalize displacement and width to board height, height to board width
-                let kPositionNorm = (d.edge == .top || d.edge == .bottom) ? 1.0 / self.material.board.size.width : 1.0 / self.material.board.size.height
-                let widthNorm = (d.edge == .top || d.edge == .bottom) ? 1.0 / self.material.board.size.width : 1.0 / self.material.board.size.height
-                let heightNorm = (d.edge == .top || d.edge == .bottom) ? 1.0 / self.material.board.size.height : 1.0 / self.material.board.size.width
-                let widthInsetCompensation = (d.edge == .top || d.edge == .bottom) ? sideInset : topInset
-                let heightInsetCompensation = (d.edge == .top || d.edge == .bottom) ? topInset : sideInset
+                let widthNorm = (d.edge.isHorizontal()) ? 1.0 / self.material.board.size.width : 1.0 / self.material.board.size.height
+                let heightNorm = (d.edge.isHorizontal()) ? 1.0 / self.material.board.size.height : 1.0 / self.material.board.size.width
+                let widthInsetCompensation = (d.edge.isHorizontal()) ? sideInset : topInset
+                let heightInsetCompensation = (d.edge.isHorizontal()) ? topInset : sideInset
 
                 // NOTE: We need to account clearance as door rectangle is measured from the actual wall
-                let height = (d.size.height + heightInsetCompensation) * heightNorm
-                let width = d.size.width * widthNorm
+                let height = (d.size.height + heightInsetCompensation)
+                let width = d.size.width
+
                 // NOTE: d.displacement is from real wall hense we REMOVE clearance
-                let rangeStart = (d.displacement - widthInsetCompensation) * kPositionNorm
-                let doorFrame = CGRect(x: rangeStart, y: 0.0, width: width, height: height)
-                // Range must contain last door point hense use nextUp
-                let range = rangeStart ..< (rangeStart + width).nextUp
-                let newDoor = Door(edge: d.edge, frame: doorFrame, nomalized: true, longRange: range)
+                let xStart = (d.displacement - widthInsetCompensation)
+                let doorFrame = CGRect(x: xStart, y: 0.0, width: width, height: height)
+
+                let newDoor = Door(name: d.name, edge: d.edge, frame: doorFrame, normalize: true, wn: widthNorm, hn: heightNorm)
                 self.doors![d.edge]?.append(newDoor)
                 self.doors![d.edge]?.sort(by: { (lhs, rhs) -> Bool in
                     return lhs.frame.origin.x < rhs.frame.origin.x

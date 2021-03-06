@@ -59,11 +59,13 @@ public struct Config: Codable {
         // Describe door position and size for the room
         struct Door: Codable {
             enum CodingKeys: String, CodingKey {
+                case name
                 case edge
                 case size
                 case displacement
             }
 
+            var name: String
             /// NOTE: Protrusion must be measured from the wall
             var size: Size
             var edge: Edge

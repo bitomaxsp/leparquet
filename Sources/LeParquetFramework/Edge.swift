@@ -7,3 +7,13 @@ enum Edge: String, Codable, CaseIterable {
     case bottom
     case right
 }
+
+extension Edge {
+    func isVertical() -> Bool {
+        return self == .left || self == .right
+    }
+
+    func isHorizontal() -> Bool {
+        return self == .top || self == .bottom
+    }
+}
