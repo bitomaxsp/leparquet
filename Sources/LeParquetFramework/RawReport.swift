@@ -26,10 +26,21 @@ class RawReport {
     private var instructions = InstructionList()
     private var boardsUsed = 0
     private var doors = [LayoutEngineConfig.Door]()
+    // Amount of boad added in eash row due to the possible doors. Normalized
+    private var expansions = [Edge: [Double]]()
 
     var unusedHeightInFirstRow: Double = 0.0
     var unusedHeightInLastRow: Double = 0.0
-    var totalRows = 0
+    var totalRows = 0 {
+        didSet {
+            for cs in Edge.allCases {
+                if cs == .left || cs == .right {
+                    self.expansions[cs] = [Double](repeating: 0.0, count: self.totalRows)
+                }
+            }
+        }
+    }
+
     var boardNumWithMargin = 0
 
     // MARK: Implementation
@@ -59,6 +70,10 @@ class RawReport {
         self.doors.append(door)
     }
 
+    func add(protrusion: Double, forEdge edge: Edge, inRow rowIndex: Int) {
+        self.expansions[edge]![rowIndex] += protrusion
+    }
+
     func append(instruction: String) {
         if var l = self.instructions.last {
             l.append(" ")
@@ -78,27 +93,32 @@ class RawReport {
     }
 
     func validate() {
-        // Sum of each row must be equal to effective room width + clearance (included in the door height) + side doors rect height
+        // Sum of each row: must be equal to effective room width + clearance (included in the door height) + side doors rect height
+        // according to how algorithm works
         var summed = [Double](repeating: 0.0, count: self.rows.count)
         for i in 0 ..< self.rows.count {
             summed[i] = self.rows[i].reduce(0.0) { (next, b) in
                 return next + b.width
             }
-
-            // summed[i] has total row width. We remove doors and clearance (included in the door height)
-//            let doorsHeight = self.doorsHeight(alongEdges: [.left, .right], forRow: i)
         }
 
-        let summedReal = summed.map {
-            ($0 * self.boardWidth).round(3, "f")
-        }
-        print(summedReal)
+//        let summedReal = summed.map {
+//            ($0 * self.boardWidth).round(3, "f")
+//        }
+//        print(summedReal)
 
-        let inset = self.engineConfig.insets.left + self.engineConfig.insets.right
+        // Check is based on prior knowledge about room size, clearance and doors used for layout
+        // Thus we make sure we have independent check from how algorithm does layout
         for i in 0 ..< summed.count {
-            let width = summed[i] * self.boardWidth + inset
-            if !width.rounded().eq(self.engineConfig.actualRoomSize.width) {
-                print("Sanity check not passed for row [\(i)]: \(width.rounded()) != \(self.engineConfig.actualRoomSize.width)")
+            let left = self.expansions[.left]![i] * self.boardWidth - self.engineConfig.insets.left
+            let right = self.expansions[.right]![i] * self.boardWidth - self.engineConfig.insets.right
+            let inset = left + right
+
+            let rowWidth = summed[i] * self.boardWidth
+            let calcWidth = self.engineConfig.actualRoomSize.width + inset
+
+            if !rowWidth.nearlyEq(calcWidth) {
+                print("Sanity check not passed for row [\(i)]: rowWidth:\(rowWidth) != checkWidth:\(calcWidth)")
             }
         }
     }

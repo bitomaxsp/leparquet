@@ -64,8 +64,11 @@ public struct Config: Codable {
                 case displacement
             }
 
+            /// NOTE: Protrusion must be measured from the wall
             var size: Size
             var edge: Edge
+
+            /// NOTE: Must be measured from the wall
             var displacement: Double
         }
 

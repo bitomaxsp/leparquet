@@ -74,7 +74,7 @@ public class RowLayoutEngine {
             self.report.lastRowHeight = boardHeight
         }
 
-        // we need to shif to get at least min_last_height mm on last row
+        // we need to shift to get at least min_last_height mm on last row
         let min_combined_height_limit = max(self.engineConfig.minLastRowHeight, self.engineConfig.desiredLastRowHeight)
 
         while self.report.lastRowHeight < min_combined_height_limit {
@@ -103,7 +103,6 @@ public class RowLayoutEngine {
 
         let startLength = self.engineConfig.firstBoard.lengthAsDouble()
 
-        // TODO: normalizedType
         var cutLength: Double = startLength
 
         /*
@@ -134,7 +133,9 @@ public class RowLayoutEngine {
             var leftCutAmount = 0.0
             if maximumLeftProtrusion > 0.0 {
                 // Look left doors to account left cut length
-                let boardProtrusion = try self.normalizedProtrusion(forEdge: .left, andRow: rowIndex)
+                let boardProtrusion = self.normalizedProtrusion(forEdge: .left, andRow: rowIndex)
+                self.report.add(protrusion: boardProtrusion, forEdge: .left, inRow: rowIndex)
+
                 leftCutAmount = maximumLeftProtrusion - boardProtrusion
                 if self.debug {
                     print("boardProtrusion:\(boardProtrusion.round(4))[\((boardProtrusion * boardWidth).round(4))], leftCutAmount:\(leftCutAmount.round(4))[\(leftCutAmount * boardWidth)]")
@@ -184,10 +185,11 @@ public class RowLayoutEngine {
                     self.report.add(instruction: "Take new board from the pack. Put in the row.")
 
                 } else if cutLength < Self.normalizedWholeStep {
-                    // TODO: Look right doors to account right cut length
+                    // Look right doors to account right cut length
+                    let boardProtrusion = self.normalizedProtrusion(forEdge: .right, andRow: rowIndex)
+                    self.report.add(protrusion: boardProtrusion, forEdge: .right, inRow: rowIndex)
 
-                    let boardProtrusion = try self.normalizedProtrusion(forEdge: .right, andRow: rowIndex)
-                    print("Right boardProtrusion:\(boardProtrusion.round(4))[\((boardProtrusion * boardWidth).round(4))]")
+//                    print("Right boardProtrusion:\(boardProtrusion.round(4))[\((boardProtrusion * boardWidth).round(4))]")
 
                     board = self.useBoardFromRightStash(cutLength)
                     // Right reused from stash if we have it with required length
@@ -373,10 +375,13 @@ public class RowLayoutEngine {
     /// Return board length protrusion for the door adjacent to edge
     /// - Parameter edge: target edge to which door belongs
     /// - Returns: relative amount of protrusion in the direction of an edge, or 0 if no protrusion needed
-    func normalizedProtrusion(forEdge edge: Edge, andRow rowIndex: Int) throws -> Double {
+    func normalizedProtrusion(forEdge edge: Edge, andRow rowIndex: Int) -> Double {
         if let idx = self.doors[edge]?.firstIndex(where: { (door) -> Bool in
-            let bottomEdge = Double(rowIndex) + 1.0 // 1 is normelized row height
-            return (bottomEdge > door.frame.origin.x) && (bottomEdge <= (door.frame.origin.x + door.frame.size.width))
+            // TODO: Make position along edge
+
+            // highest coord in the direction lateral to covering must be in doors range
+            let currRange = Double(rowIndex) ..< (Double(rowIndex) + 1.0).nextUp
+            return door.longRange.overlaps(currRange)
         }) {
             let door = self.doors[edge]![idx]
             assert(door.edge == edge)
