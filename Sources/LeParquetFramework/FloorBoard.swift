@@ -135,3 +135,9 @@ extension ReusableBoard: Comparable {
         return lhs.w.eq(rhs.w)
     }
 }
+
+extension ReusableBoard: CustomStringConvertible {
+    var description: String {
+        return "(\(Self.self), [\(self.w.round(3)), \(self.h.round(3))] M:\(self.mark), T:\(self.reusable ? "use" : "trash"))"
+    }
+}

@@ -49,15 +49,15 @@ class RawReport {
         self.rows.append(BoardStash())
     }
 
-    func add(board: ReusableBoard) {
-        self.rows[self.rows.count - 1].append(board)
-    }
-
     func newBoard() -> FloorBoard {
         defer {
             self.boardsUsed += 1
         }
         return FloorBoard(width: self.normalizedBoardWidth, height: self.boardHeight)
+    }
+
+    func add(board: ReusableBoard) {
+        self.rows[self.rows.count - 1].append(board)
     }
 
     func add(instruction: String) {
@@ -74,17 +74,17 @@ class RawReport {
         self.expansions[edge]![rowIndex] += protrusion
     }
 
+    func add(trash: ReusableBoard) {
+        precondition(trash.width > 0.0, "Zero width trash. Weird!")
+        self.trashCuts.append(trash)
+    }
+
     func append(instruction: String) {
         if var l = self.instructions.last {
             l.append(" ")
             l.append(instruction)
             self.instructions[self.instructions.count - 1] = l
         }
-    }
-
-    func stash(trash: ReusableBoard) {
-        precondition(trash.width > 0.0, "Zero width trash. Weird!")
-        self.trashCuts.append(trash)
     }
 
     func collectRests<T>(from: [T]) where T: ReusableBoard {

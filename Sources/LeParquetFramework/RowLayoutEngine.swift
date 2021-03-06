@@ -31,9 +31,7 @@ public class RowLayoutEngine {
         self.calculateRows()
         try self.normalizedWidthCalculation()
 
-        // TODO: Look top doors
-//        let maxX = rowCovered + board!.width
-        // TODO: Look bottom doors
+        self.coverHorizontalDoorsUsingRests()
 
         self.report.collectRests(from: self.reusableRight)
         self.report.collectRests(from: self.reusableLeft)
@@ -52,12 +50,9 @@ public class RowLayoutEngine {
 
     private func calculateRows() {
         let boardHeight = self.engineConfig.material.board.size.height
-//        let borad_num_frac = self.engineConfig.effectiveRoomSize.height / boardHeight
         let normalizedRoomHeight = self.engineConfig.effectiveRoomSize.height / boardHeight
         let totalRows = ceil(normalizedRoomHeight)
         self.report.totalRows = Int(totalRows)
-
-//        normalizedRoomHeight.rem
 
         self.report.unusedHeightInLastRow = totalRows * boardHeight - self.engineConfig.effectiveRoomSize.height
 
@@ -365,7 +360,7 @@ public class RowLayoutEngine {
     }
 
     private func collect(trash: ReusableBoard) {
-        self.report.stash(trash: trash)
+        self.report.add(trash: trash)
         self.report.append(instruction: "Put cut marked as \(trash.mark) to trash.")
         if self.debug {
             print("Collect trash \(trash.width.round(6)), reuse: \(trash.reusable)")
@@ -400,28 +395,97 @@ public class RowLayoutEngine {
         // Check that largest (in height) door rect is less than first row: We cover!
         // Note arrays are sorted from ASC
         let boardHeight = self.engineConfig.material.board.size.height
-        self.coverDoorsAlong(edge: .top, usingNormalizedRest: self.report.unusedHeightInFirstRow / boardHeight)
-        self.coverDoorsAlong(edge: .bottom, usingNormalizedRest: self.report.unusedHeightInLastRow / boardHeight)
+        self.coverDoorsAlong(edge: .top, usingNormalizedHeightRest: self.report.unusedHeightInFirstRow / boardHeight)
+        self.coverDoorsAlong(edge: .bottom, usingNormalizedHeightRest: self.report.unusedHeightInLastRow / boardHeight)
     }
 
-    private func coverDoorsAlong(edge: Edge, usingNormalizedRest rest: Double) {
+    private func coverHorizontalDoorsUsingRests() {
+        // Sort: DESC
+        self.reusableRight.sort(by: >)
+        self.reusableLeft.sort(by: >)
+        print(self.reusableRight)
+        print(self.reusableLeft)
+
+        self.coverDoorPassage(atEdge: .top)
+        self.coverDoorPassage(atEdge: .bottom)
+    }
+
+    private func coverDoorPassage(atEdge edge: Edge) {
+        while let doorWidth = maxDoorWidth(forEdge: edge), !doorWidth.isZero {
+            let board = self.findBoardCutForDoor(withNormalizedWidth: doorWidth)
+            self.coverDoorsAlong(edge: edge, usingNormalizedWidthRest: board.width)
+            // TODO: check passage height
+            // TODO: save board
+        }
+    }
+
+    private func findBoardCutForDoor(withNormalizedWidth width: Double) -> ReusableBoard {
+        if let cut = self.reusableRight.first {
+            if cut.width >= width {
+                print("Found cut: \(cut), for bottom edge")
+                return self.reusableRight.removeFirst()
+            }
+        }
+
+        if let cut = self.reusableLeft.first {
+            if cut.width >= width {
+                print("Found cut: \(cut), for bottom edge")
+                return self.reusableLeft.removeFirst()
+            }
+        }
+
+        let board = self.report.newBoard()
+        let pikeWidth = 10.0 / self.report.boardWidth
+
+        let (left, right) = board.cutAlongWidth(atDistance: pikeWidth, from: .left, cutWidth: self.engineConfig.normalizedLatToolCutWidth)
+        self.report.add(trash: left)
+
+        let (left1, right1) = right.cutAlongWidth(atDistance: width, from: .left, cutWidth: self.engineConfig.normalizedLatToolCutWidth)
+        self.stash(right: right1)
+
+        return left1
+    }
+
+    private func maxDoorWidth(forEdge edge: Edge) -> Double? {
+        if let e = self.doors[edge], let last = e.last {
+            return Double(last.frame.size.width)
+        }
+        return nil
+    }
+
+    private func coverDoorsAlong(edge: Edge, usingNormalizedHeightRest rest: Double) {
         precondition(edge == .bottom || edge == .top, "Edge must top or bottom")
         precondition(rest >= 0.0 && rest < 1.0, "Rest is not normalized: \(rest)")
 
-        if let e = self.doors[edge] {
-            if let last = e.last {
-                // Unused part can be used to cover door passage
-                if last.frame.size.height <= rest {
-                    print("Can cover all \(edge) doors using \(rest) rest")
+        if let e = self.doors[edge], let last = e.last {
+            // Unused part can be used to cover door passage
+            if last.frame.size.height <= rest {
+                print("Can cover all \(edge) doors using \(rest) rest")
 
-                    for d in e {
-                        self.report.add(door: d)
-                    }
-                    self.doors.removeValue(forKey: edge)
-                } else {
-                    // Larges door can't be covered, so we for simplicity fallback to cover from whole boards
-                    print("WARN: Couldn't cover some doors along \(edge) edge using \(rest) rest. Fallback to whole boards.")
+                for d in e {
+                    self.report.add(door: d)
                 }
+                self.doors.removeValue(forKey: edge)
+            } else {
+                // Larges door can't be covered, so we for simplicity fallback to cover from whole boards
+                print("WARN: Couldn't cover some doors along \(edge) edge using \(rest) rest. Will use whole boards from the rests after layout.")
+            }
+        }
+    }
+
+    private func coverDoorsAlong(edge: Edge, usingNormalizedWidthRest rest: Double) {
+        precondition(edge == .bottom || edge == .top, "Edge must top or bottom")
+        precondition(rest >= 0.0 && rest < 1.0, "Rest is not normalized: \(rest)")
+
+        if let e = self.doors[edge], let last = e.last {
+            // Unused part can be used to cover door passage
+            if last.frame.size.width <= rest {
+                print("Can cover \(edge) door using \(rest) rest")
+
+                self.report.add(door: self.doors[edge]!.removeLast())
+            } else {
+                // Larges door can't be covered, so we for simplicity fallback to cover from whole boards
+                print("ERROR: Couldn't cover door (\(last) using \(rest) rest. This is probably a bug.")
             }
         }
     }

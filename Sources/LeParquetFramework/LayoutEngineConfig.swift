@@ -153,6 +153,8 @@ struct LayoutEngineConfig {
     }
 
     private func validate() throws {
+        // TODO: tool cut with limit 5mm.
+        // cleareance 30mm
         // TODO: check doors for intersections
         if let ddoors = self.doors {
             for (_, v) in ddoors {
