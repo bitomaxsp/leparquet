@@ -95,17 +95,8 @@ class RawReport {
     func validate() {
         // Sum of each row: must be equal to effective room width + clearance (included in the door height) + side doors rect height
         // according to how algorithm works
-        var summed = [Double](repeating: 0.0, count: self.rows.count)
-        for i in 0 ..< self.rows.count {
-            summed[i] = self.rows[i].reduce(0.0) { (next, b) in
-                return next + b.width
-            }
-        }
-
-        let summedReal = summed.map {
-            ($0 * self.boardWidth).round(3, "f")
-        }
-        print("Each row length (including side doors, no clearance if no door): \(summedReal)")
+        var s = ""
+        let summed = self.sumRowLengths(to: &s)
 
         // Check is based on prior knowledge about room size, clearance and doors used for layout
         // Thus we make sure we have independent check from how algorithm does layout
@@ -152,11 +143,13 @@ class RawReport {
 
         self.printRows(to: &ss)
         self.printRows(to: &ss, self.engineConfig.material.board.size.width)
-        print("\n", to: &ss)
 
         let restWidthSummed = self.trashCuts.reduce(0.0) { (next, b) in
             return next + b.width
         }
+
+        self.sumRowLengths(to: &ss)
+
         let unused_area = self.boardArea * restWidthSummed
         print("Unusable side trash area: \(unused_area.format(convertedTo: .squareMeters))", to: &ss)
 
@@ -248,7 +241,26 @@ class RawReport {
         return ss
     }
 
-    func printRows(to ss: inout String, _ mul: Double = 1.0) {
+    @discardableResult
+    private func sumRowLengths(to ss: inout String) -> [Double] {
+        // Sum of each row: must be equal to effective room width + clearance (included in the door height) + side doors rect height
+        // according to how algorithm works
+        var summed = [Double](repeating: 0.0, count: self.rows.count)
+        for i in 0 ..< self.rows.count {
+            summed[i] = self.rows[i].reduce(0.0) { (next, b) in
+                return next + b.width
+            }
+        }
+
+        let summedReal = summed.map {
+            ($0 * self.boardWidth).round(3, "f")
+        }
+
+        print("\nEach row length (including side doors, no clearance if no door): \(summedReal)\n", to: &ss)
+        return summed
+    }
+
+    private func printRows(to ss: inout String, _ mul: Double = 1.0) {
         let flavor = mul > 1.0 ? "real" : "nomalized"
         print("\nLayout [\(flavor)]:", to: &ss)
 

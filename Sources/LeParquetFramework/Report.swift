@@ -4,8 +4,8 @@ public class Report {
     var reports = [RawReport]()
 
     func add(_ rawReport: RawReport) {
-        print("Add report for \(rawReport.engineConfig.roomName) room with floor \(rawReport.engineConfig.floorName)")
         rawReport.validate()
+        print("Add report for \(rawReport.engineConfig.roomName) room with floor \(rawReport.engineConfig.floorName)")
         self.reports.append(rawReport)
     }
 
