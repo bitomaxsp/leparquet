@@ -87,8 +87,18 @@ public class RowLayoutEngine {
         let needFirstCut = !boardHeight.eq(self.report.firstRowHeight)
         let needLastCut = !boardHeight.eq(self.report.lastRowHeight)
 
-        self.report.unusedHeightInFirstRow = boardHeight - self.report.firstRowHeight - (needFirstCut ? min(self.report.unusedHeightInFirstRow, self.engineConfig.lonToolCutWidth) : 0.0)
-        self.report.unusedHeightInLastRow = boardHeight - self.report.lastRowHeight - (needLastCut ? min(self.report.unusedHeightInLastRow, self.engineConfig.lonToolCutWidth) : 0.0)
+        self.report.unusedHeightInFirstRow = boardHeight - self.report.firstRowHeight - (needFirstCut ? min(boardHeight - self.report.firstRowHeight, self.engineConfig.lonToolCutWidth) : 0.0)
+        if (needFirstCut) {
+            let measure = self.report.unusedHeightInFirstRow + self.engineConfig.lonToolCutWidth
+            self.report.add(instruction: "Measure \(measure) from the top of the first row and cut it. Make sure rest is \(self.report.firstRowHeight)mm in height.")
+        }
+
+        self.report.unusedHeightInLastRow = boardHeight - self.report.lastRowHeight - (needLastCut ? min(boardHeight - self.report.lastRowHeight, self.engineConfig.lonToolCutWidth) : 0.0)
+        if (needLastCut) {
+            let measure = self.report.unusedHeightInLastRow + self.engineConfig.lonToolCutWidth
+            self.report.add(instruction: "Measure \(measure) from the bottom of the last row and cut it. Make sure rest is \(self.report.lastRowHeight)mm in height.")
+        }
+
         precondition(self.report.unusedHeightInFirstRow >= 0.0, "Unused first row rest must be positive")
         precondition(self.report.unusedHeightInLastRow >= 0.0, "Unused last row rest must be positive")
 
