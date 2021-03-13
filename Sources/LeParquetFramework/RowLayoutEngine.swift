@@ -398,7 +398,9 @@ public class RowLayoutEngine {
             // Get rande for the next row to see we this row is the last one
             let nextRange = Double(rowIndex + 1) ... Double(rowIndex + 2)
             if !nextRange.overlaps(door.longRange) {
-                print(">>>>>>>>>>>>>>>>>>>> rowIndex:\(rowIndex) is last for door: \(door.name)")
+                if self.debug {
+                    print("rowIndex:\(rowIndex) is last for door: \(door.name)")
+                }
                 retDoor = self.doors[edge]!.remove(at: idx)
             }
 
