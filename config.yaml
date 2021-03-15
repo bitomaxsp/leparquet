@@ -8,7 +8,7 @@ show_calculations: false
 height_clearance: 10
 # Same as above but for the last and right sides
 # Could be overriden per room
-length_clearance: 10
+width_clearance: 10
 
 # Minimum amoung of last boards height in mm. Usually it must be > 60mm
 # Could be overriden per room
@@ -86,7 +86,7 @@ rooms:
     # This is override for this room
     height_clearance: 200
     # This is override for this room
-    length_clearance: 300
+    width_clearance: 300
     # This is override for this room
     min_last_row_height: 100.0
     # This is override for this room

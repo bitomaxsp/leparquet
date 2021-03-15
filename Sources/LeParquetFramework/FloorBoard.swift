@@ -23,11 +23,11 @@ class ReusableBoard: Rect {
     var cornerCutOut: Bool = false
 
     fileprivate func createLeft(width: Double, reuse: Bool) -> LeftCut {
-        return LeftCut(width: width, height: self.height, reuse: reuse)
+        return LeftCut(width: width, height: self.height, reuse: !width.isZero && reuse)
     }
 
     fileprivate func createRight(width: Double, reuse: Bool) -> RightCut {
-        return RightCut(width: width, height: self.height, reuse: reuse)
+        return RightCut(width: width, height: self.height, reuse: !width.isZero && reuse)
     }
 
     func cutAlongWidth(atDistance: Double, from fromEdge: Edge, cutWidth: Double) -> (LeftCut, RightCut) {
@@ -52,8 +52,10 @@ final class LeftCut: ReusableBoard {
         // Left is good
         // Right is trash
 
-        let newWidth = self.width - atDistance - cutWidth
-        precondition(newWidth > 0.0, "newWidth must be > 0")
+        let diff = self.width - atDistance
+        // Tool can remove amount of material and is less then tool cut width hense min()
+        let newWidth = diff - min(cutWidth, diff)
+        precondition(newWidth >= 0.0, "newWidth must be > 0")
         switch fromEdge {
         case .left:
             return (createLeft(width: atDistance, reuse: true), createRight(width: newWidth, reuse: false))
@@ -81,8 +83,10 @@ final class RightCut: ReusableBoard {
         // Left is trash
         // Right is good
 
-        let newWidth = self.width - atDistance - cutWidth
-        precondition(newWidth > 0.0, "newWidth must be > 0")
+        let diff = self.width - atDistance
+        // Tool can remove amount of material and is less then tool cut width hense min()
+        let newWidth = diff - min(cutWidth, diff)
+        precondition(newWidth >= 0.0, "newWidth must be > 0")
         switch fromEdge {
         case .left:
             return (createLeft(width: atDistance, reuse: false), createRight(width: newWidth, reuse: true))
@@ -106,9 +110,10 @@ final class FloorBoard: ReusableBoard {
     override func cutAlongWidth(atDistance: Double, from fromEdge: Edge, cutWidth: Double) -> (LeftCut, RightCut) {
         // Left is good
         // Right is good
-
-        let newWidth = self.width - atDistance - cutWidth
-        precondition(newWidth > 0.0, "newWidth must be > 0")
+        let diff = self.width - atDistance
+        // Tool can remove amount of material and is less then tool cut width hense min()
+        let newWidth = diff - min(cutWidth, diff)
+        precondition(newWidth >= 0.0, "newWidth must be > 0")
         switch fromEdge {
         case .left:
             return (createLeft(width: atDistance, reuse: true), createRight(width: newWidth, reuse: true))

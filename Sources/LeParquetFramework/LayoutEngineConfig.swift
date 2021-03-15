@@ -80,7 +80,7 @@ struct LayoutEngineConfig {
         self.firstBoard = room.firstBoard
 
         let topInset = room.heightClearance ?? config.heightClearance
-        let sideInset = room.lengthClearance ?? config.lengthClearance
+        let sideInset = room.widthClearance ?? config.widthClearance
         self.insets = Insets(top: topInset, left: sideInset, bottom: topInset, right: sideInset)
 
         self.effectiveRoomSize = Size(width: self.actualRoomSize.width - 2.0 * sideInset, height: self.actualRoomSize.height - 2.0 * topInset)
@@ -159,15 +159,15 @@ struct LayoutEngineConfig {
         if let hc = room.heightClearance, hc > maxClearance_mm {
             throw Errors.validationFailed("Room height clearance [\(hc)] must be <= \(maxClearance_mm)mm")
         }
-        if let lc = room.lengthClearance, lc > maxClearance_mm {
-            throw Errors.validationFailed("Room length clearance [\(lc)] must be <= \(maxClearance_mm)mm")
+        if let lc = room.widthClearance, lc > maxClearance_mm {
+            throw Errors.validationFailed("Room width clearance [\(lc)] must be <= \(maxClearance_mm)mm")
         }
 
         if config.heightClearance > maxClearance_mm {
             throw Errors.validationFailed("Global height clearance [\(config.heightClearance)] must be <= \(maxClearance_mm)mm")
         }
-        if config.lengthClearance > maxClearance_mm {
-            throw Errors.validationFailed("Global length clearance [\(config.lengthClearance)] must be <= \(maxClearance_mm)mm")
+        if config.widthClearance > maxClearance_mm {
+            throw Errors.validationFailed("Global width clearance [\(config.widthClearance)] must be <= \(maxClearance_mm)mm")
         }
     }
 }

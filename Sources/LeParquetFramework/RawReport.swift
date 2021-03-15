@@ -75,8 +75,10 @@ class RawReport {
     }
 
     func add(trash: ReusableBoard) {
-        precondition(trash.width > 0.0, "Zero width trash. Weird!")
-        self.trashCuts.append(trash)
+//        precondition(trash.width > 0.0, "Zero width trash. Weird!")
+        if (!trash.width.isZero) {
+            self.trashCuts.append(trash)
+        }
     }
 
     func append(instruction: String) {

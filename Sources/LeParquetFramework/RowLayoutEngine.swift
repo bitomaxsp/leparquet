@@ -527,7 +527,7 @@ public class RowLayoutEngine {
             // Unused part can be used to cover door passage
             if last.frame.size.height <= rest {
                 print("Can cover all \(edge) doors using \(rest) rest")
-
+                self.report.add(instruction: "\(edge) edge doors [\(e.count)] could be covered with unused rest from the \(edge)")
                 for d in e {
                     self.report.add(door: d)
                 }

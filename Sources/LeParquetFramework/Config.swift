@@ -4,7 +4,7 @@ public struct Config: Codable {
     enum CodingKeys: String, CodingKey {
         case showCalculations = "show_calculations"
         case heightClearance = "height_clearance"
-        case lengthClearance = "length_clearance"
+        case widthClearance = "width_clearance"
         case minLastRowHeight = "min_last_row_height"
         case desiredLastRowHeight = "desired_last_row_height"
         case coverMargin = "cover_margin"
@@ -22,7 +22,7 @@ public struct Config: Codable {
     var heightClearance = 0.0
     /// One side value
     // Could be override per room
-    var lengthClearance = 0.0
+    var widthClearance = 0.0
     // Could be override per room
     var minLastRowHeight = 60.0
     // Could be override per room
@@ -49,7 +49,7 @@ public struct Config: Codable {
             case size
             case doors
             case heightClearance = "height_clearance"
-            case lengthClearance = "length_clearance"
+            case widthClearance = "width_clearance"
             case firstBoard = "first_board"
             case coverMargin = "cover_margin"
             case minLastRowHeight = "min_last_row_height"
@@ -98,7 +98,7 @@ public struct Config: Codable {
         var doors: [Door]?
 
         var heightClearance: Double?
-        var lengthClearance: Double?
+        var widthClearance: Double?
         var coverMargin: Double?
         var minLastRowHeight: Double?
         var desiredLastRowHeight: Double?
