@@ -49,10 +49,10 @@ struct LayoutEngineConfig {
     let actualRoomSize: Size
     /// This size is actualRoomSize - side clearance
     let effectiveRoomSize: Size
-    /// Positive values mens that rectangle to which insets are applied is reduced by them
+    /// Positive values means that rectangle to which insets are applied is reduced by them
     let insets: Insets
 
-    let firstBoard: Config.Room.FirstBoard
+    let firstBoard: Config.FirstBoard
     let minLastRowHeight: Double
     let desiredLastRowHeight: Double
     let coverMaterialMargin: Double

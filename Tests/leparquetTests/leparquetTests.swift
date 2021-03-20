@@ -1,15 +1,14 @@
-@testable import leparquet
+@testable import LeParquetFramework
 import XCTest
 
 final class leparquetTests: XCTestCase {
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct
-        // results.
-//        XCTAssertEqual(leparquet().text, "Hello, World!")
+    func testConfig() {
+        var config = Config()
+
+        //        XCTAssertEqual(leparquet().text, "Hello, World!")
     }
 
     static var allTests = [
-        ("testExample", testExample),
+        ("testConfig", testConfig),
     ]
 }

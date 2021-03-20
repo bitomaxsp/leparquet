@@ -33,12 +33,12 @@ longitudinal_tool_cut_width: 3.0
 
 # Type of laylout: 1/2 - brick, 1/3 - deck, free-joints, fixed-joints
 # This is global, but you can override it per room
-# layout:
-#   type: 1/2
-#   first_board: "1/2" # or "full"
+layout:
+  type: deck
+  first_board: 1/3 # or "full"
 
 # layout:
-#   type: 1/3
+#   type: deck
 #   first_board: "1/3" # or "full"
 
 # layout:

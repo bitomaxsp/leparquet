@@ -13,6 +13,7 @@ public struct Config: Codable {
         case latToolCutWidth = "lateral_tool_cut_width"
         case lonToolCutWidth = "longitudinal_tool_cut_width"
         case floorIndex = "floor_index"
+        case layout
     }
 
     var showCalculations: Bool = false
@@ -35,12 +36,65 @@ public struct Config: Codable {
     var lonToolCutWidth = 3.0
     // Seleced floor index for particular calculation
     var floorIndex: Int?
+    // Global layout for all rooms, override per room is possible.
+    var layout: Layout
 
     struct Size: Codable {
         /// Length, from left to right
         var width = 0.0
         /// Count from top to bottom
         var height = 0.0
+    }
+
+    enum Joints: String, CaseIterable, Codable {
+        case brick
+        case deck
+        case freeJoints = "free joints"
+        case fixedJoints = "fixed joints"
+
+        func validFirst() -> [FirstBoard] {
+            switch self {
+            case .brick: return [.full, .half]
+            case .deck: return [.one_3, .two_3, .full]
+            default: return [.full]
+            }
+        }
+    }
+
+    enum FirstBoard: String, CaseIterable, Codable {
+        case full
+        case half = "1/2"
+        case one_3 = "1/3"
+        case two_3 = "2/3"
+
+        func lengthAsDouble() -> Double {
+            switch self {
+            case .full: return 1.0
+            case .half: return 1.0 / 2.0
+            case .one_3: return 1.0 / 3.0
+            case .two_3: return 2.0 / 3.0
+            }
+        }
+    }
+
+    struct Layout: Codable {
+        enum CodingKeys: String, CodingKey {
+            case joints = "type"
+            case firstBoard = "first_board"
+            case angle
+        }
+
+        var joints: Joints
+        var firstBoard: FirstBoard
+        /// Degrees. 0˚ is 3 o'clock, 90˚ is 12 o'clock, etc.
+        let angle = 0.0
+
+        func validate() throws {
+            let first = self.joints.validFirst().first { $0 == self.firstBoard }
+            guard let _ = first else {
+                throw ValidationError.invalidLayout("Invalid first baord (\(self.firstBoard)), must be one of (\(self.joints.validFirst())")
+            }
+        }
     }
 
     struct Room: Codable {
@@ -72,20 +126,6 @@ public struct Config: Codable {
 
             /// NOTE: Must be measured from the wall
             var displacement: Double
-        }
-
-        enum FirstBoard: String, CaseIterable, Codable {
-            case full
-            case one_3 = "1/3"
-            case two_3 = "2/3"
-
-            func lengthAsDouble() -> Double {
-                switch self {
-                case .full: return 1.0
-                case .one_3: return 1.0 / 3.0
-                case .two_3: return 2.0 / 3.0
-                }
-            }
         }
 
         var name: String = ""
@@ -131,6 +171,7 @@ public struct Config: Codable {
 
     enum ValidationError: Error {
         case badFloorIndex(String)
+        case invalidLayout(String)
     }
 
     public func validate() throws {
@@ -139,5 +180,7 @@ public struct Config: Codable {
                 throw ValidationError.badFloorIndex("Zero based floor_index (\(idx)) must be less than nuber of floor choices (\(self.floorChoices.count)")
             }
         }
+
+        try self.layout.validate()
     }
 }
