@@ -32,7 +32,10 @@ let package = Package(
         ),
         .testTarget(
             name: "leparquetTests",
-            dependencies: ["LeParquetFramework"]
+            dependencies: ["LeParquetFramework"],
+            resources: [
+                .copy("config.yaml"),
+            ]
         ),
     ]
 )

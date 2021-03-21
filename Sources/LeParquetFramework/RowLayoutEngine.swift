@@ -116,10 +116,10 @@ public class RowLayoutEngine {
          If protrusion on the left > 0 then we have to shift the floor left for that amount.
          Extend normalizedRoomWidth. In the case boards edges will shift between rows where there is a door.
          Shift whole layout on the amount of left board height so that edge do not missalign.
-         Algorithimically shift is done by increasing normalizedRoomWidth for the rows where the doors are
+         Algorithimically shift is done by increasing normalizedRoomWidth.
          */
         let maximumLeftProtrusion = self.engineConfig.maxNormalizedLeftProtrusion
-        // 1 - Normalized to one board length
+        // 1 - Normalized to one board wodth/length
         let normalizedRoomWidth = self.engineConfig.effectiveRoomSize.width / boardWidth + maximumLeftProtrusion
 
         if self.debug {

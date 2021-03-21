@@ -22,7 +22,7 @@ struct LayoutEngineConfig {
 
             self.type = floor.type
             self.name = floor.name
-            self.notes = nil
+            self.notes = floor.notes
         }
 
         struct Board {
@@ -46,6 +46,7 @@ struct LayoutEngineConfig {
 
     let roomName: String
     let floorName: String
+    let floorType: String
     let actualRoomSize: Size
     /// This size is actualRoomSize - side clearance
     let effectiveRoomSize: Size
@@ -74,7 +75,8 @@ struct LayoutEngineConfig {
 
     init(_ config: Config, _ floor: Config.Floor, _ room: Config.Room) throws {
         self.roomName = room.name
-        self.floorName = floor.type
+        self.floorName = floor.name
+        self.floorType = floor.type
         self.actualRoomSize = room.size
         // Fallback to 1/3 if user input is invalid
         self.firstBoard = room.firstBoard

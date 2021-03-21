@@ -30,7 +30,7 @@ struct Door {
             let width = frame.size.width.native * wn
 
             self.frame = CGRect(x: frame.origin.x.native * wn, y: 0.0, width: width, height: height)
-            //        let range = rangeStart ..< (rangeStart + width).nextUp
+
         } else {
             self.frame = frame
         }

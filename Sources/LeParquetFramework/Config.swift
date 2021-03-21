@@ -39,7 +39,7 @@ public struct Config: Codable {
     // Global layout for all rooms, override per room is possible.
     var layout: Layout
 
-    struct Size: Codable {
+    struct Size: Codable, Equatable {
         /// Length, from left to right
         var width = 0.0
         /// Count from top to bottom
@@ -149,6 +149,7 @@ public struct Config: Codable {
     struct Floor: Codable {
         enum CodingKeys: String, CodingKey {
             case type
+            case notes
             case boardSize = "board_size"
             case packArea = "pack_area"
             case boardsPerPack = "boards_per_pack"
@@ -158,6 +159,7 @@ public struct Config: Codable {
 
         var type = ""
         var name = ""
+        var notes: String?
         var pricePerM2: Double?
         var packWeight: Double?
         var boardSize: Size
