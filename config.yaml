@@ -35,7 +35,8 @@ longitudinal_tool_cut_width: 3.0
 # This is global, but you can override it per room
 layout:
   type: deck
-  first_board: 1/3 # or "full"
+  first_board: 1/3 # or 1/2, 2/3, full
+  angle: 0 # Degrees. 0˚ is 3 o'clock, 90˚ is 12 o'clock, etc.
 
 # layout:
 #   type: deck

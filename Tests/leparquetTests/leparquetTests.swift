@@ -54,7 +54,8 @@ final class ConfigTests: XCTestCase {
 
         XCTAssertEqual(engineconfig.insets, Insets(top: topInset, left: sideInset, bottom: topInset, right: sideInset), "Insets mismatch")
 
-        XCTAssertEqual(engineconfig.firstBoard, room.firstBoard)
+//        XCTAssertEqual(engineconfig.firstBoard, room.firstBoard)
+        XCTAssertEqual(engineconfig.layout, config.layout)
         XCTAssertEqual(engineconfig.minLastRowHeight, room.minLastRowHeight ?? config.minLastRowHeight)
         XCTAssertEqual(engineconfig.desiredLastRowHeight, room.desiredLastRowHeight ?? config.desiredLastRowHeight)
         XCTAssertEqual(engineconfig.coverMaterialMargin, room.coverMargin ?? config.coverMargin)
@@ -135,8 +136,9 @@ longitudinal_tool_cut_width: 2.3
 # Type of laylout: 1/2 - brick, 1/3 - deck, free-joints, fixed-joints
 # This is global, but you can override it per room
 layout:
- type: deck
- first_board: 1/3 # or "full"
+  type: deck
+  first_board: 1/3 # or "full"
+  angle: 1
 
 rooms:
  - name: "small"  # Room name to identify it later

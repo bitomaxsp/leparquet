@@ -5,6 +5,7 @@ let maxClearance_mm = 30.0
 
 struct LayoutEngineConfig {
     typealias Size = Config.Size
+    typealias Layout = Config.Layout
 
     struct Material {
         init(_ floor: Config.Floor) {
@@ -53,7 +54,8 @@ struct LayoutEngineConfig {
     /// Positive values means that rectangle to which insets are applied is reduced by them
     let insets: Insets
 
-    let firstBoard: Config.FirstBoard
+    let layout: Layout
+//    let firstBoard: Config.FirstBoard
     let minLastRowHeight: Double
     let desiredLastRowHeight: Double
     let coverMaterialMargin: Double
@@ -78,8 +80,9 @@ struct LayoutEngineConfig {
         self.floorName = floor.name
         self.floorType = floor.type
         self.actualRoomSize = room.size
+        self.layout = room.layout ?? config.layout
         // Fallback to 1/3 if user input is invalid
-        self.firstBoard = room.firstBoard
+//        self.firstBoard = room.firstBoard
 
         let topInset = room.heightClearance ?? config.heightClearance
         let sideInset = room.widthClearance ?? config.widthClearance

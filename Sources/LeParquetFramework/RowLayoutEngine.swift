@@ -1,16 +1,16 @@
 import Foundation
 
 public class RowLayoutEngine {
-    typealias Stash = RawReport.BoardStash
-    typealias StashOfLefts = [LeftCut]
-    typealias StashOfRights = [RightCut]
+    private typealias Stash = RawReport.BoardStash
+    private typealias StashOfLefts = [LeftCut]
+    private typealias StashOfRights = [RightCut]
 
     // ###################################
 
-    let engineConfig: LayoutEngineConfig
-    let report: RawReport
-    static let normalizedWholeStep = 1.0
-    let debug: Bool
+    private let engineConfig: LayoutEngineConfig
+    private let report: RawReport
+    private static let normalizedWholeStep = 1.0
+    private let debug: Bool
     // NOTE: Reusable right cut can only be used on left side, and vise versa
     private var reusableLeft = StashOfRights()
     private var reusableRight = StashOfLefts()
@@ -59,7 +59,7 @@ public class RowLayoutEngine {
 
         self.report.unusedHeightInLastRow = totalRows * boardHeight - self.engineConfig.effectiveRoomSize.height
 
-        precondition(self.report.unusedHeightInLastRow <= boardHeight, "Ununsed last board height must be less then 1 board height")
+        precondition(self.report.unusedHeightInLastRow <= boardHeight, "Ununsed last board height must be less than 1 board height")
 
         self.report.lastRowHeight = boardHeight - self.report.unusedHeightInLastRow
 
@@ -72,7 +72,7 @@ public class RowLayoutEngine {
             self.report.lastRowHeight = boardHeight
         }
 
-        // we need to shift to get at least min_last_height mm on last row
+        // we need to shift whole layout up (shorten first row in height) to get at least min_last_height mm on last row
         let min_combined_height_limit = max(self.engineConfig.minLastRowHeight, self.engineConfig.desiredLastRowHeight)
 
         while self.report.lastRowHeight < min_combined_height_limit {
@@ -84,17 +84,19 @@ public class RowLayoutEngine {
             }
         }
 
-        let needFirstCut = !boardHeight.eq(self.report.firstRowHeight)
-        let needLastCut = !boardHeight.eq(self.report.lastRowHeight)
+        let needFirstRowCut = !boardHeight.eq(self.report.firstRowHeight)
+        let needLastRowCut = !boardHeight.eq(self.report.lastRowHeight)
 
-        self.report.unusedHeightInFirstRow = boardHeight - self.report.firstRowHeight - (needFirstCut ? min(boardHeight - self.report.firstRowHeight, self.engineConfig.lonToolCutWidth) : 0.0)
-        if (needFirstCut) {
+        let diff1 = boardHeight - self.report.firstRowHeight
+        self.report.unusedHeightInFirstRow = diff1 - (needFirstRowCut ? min(diff1, self.engineConfig.lonToolCutWidth) : 0.0)
+        if (needFirstRowCut) {
             let measure = self.report.unusedHeightInFirstRow + self.engineConfig.lonToolCutWidth
             self.report.add(instruction: "Measure \(measure) from the top of the first row and cut it. Make sure rest is \(self.report.firstRowHeight)mm in height.")
         }
 
-        self.report.unusedHeightInLastRow = boardHeight - self.report.lastRowHeight - (needLastCut ? min(boardHeight - self.report.lastRowHeight, self.engineConfig.lonToolCutWidth) : 0.0)
-        if (needLastCut) {
+        let diff2 = boardHeight - self.report.lastRowHeight
+        self.report.unusedHeightInLastRow = diff2 - (needLastRowCut ? min(diff2, self.engineConfig.lonToolCutWidth) : 0.0)
+        if (needLastRowCut) {
             let measure = self.report.unusedHeightInLastRow + self.engineConfig.lonToolCutWidth
             self.report.add(instruction: "Measure \(measure) from the bottom of the last row and cut it. Make sure rest is \(self.report.lastRowHeight)mm in height.")
         }
@@ -108,9 +110,11 @@ public class RowLayoutEngine {
 
     private func normalizedWidthCalculation() throws {
         let boardWidth = self.engineConfig.material.board.size.width
-        let startLength = self.engineConfig.firstBoard.lengthAsDouble()
+        let startLength = self.engineConfig.layout.firstBoard.lengthAsDouble()
         var cutLength: Double = startLength
-
+        
+        precondition(cutLength > 0.0 && cutLength <= 1.0, "Initial cutLength not in range")
+        
         /*
          Explanation:
          If protrusion on the left > 0 then we have to shift the floor left for that amount.
@@ -119,7 +123,7 @@ public class RowLayoutEngine {
          Algorithimically shift is done by increasing normalizedRoomWidth.
          */
         let maximumLeftProtrusion = self.engineConfig.maxNormalizedLeftProtrusion
-        // 1 - Normalized to one board wodth/length
+        // 1 - Normalized to one board width/length
         let normalizedRoomWidth = self.engineConfig.effectiveRoomSize.width / boardWidth + maximumLeftProtrusion
 
         if self.debug {
@@ -390,7 +394,7 @@ public class RowLayoutEngine {
     /// Return board length protrusion for the door adjacent to edge
     /// - Parameter edge: target edge to which door belongs
     /// - Returns: relative amount of protrusion in the direction of an edge, or 0 if no protrusion needed. Door if door is coverd
-    func normalizedProtrusion(forEdge edge: Edge, andRow rowIndex: Int) -> (Double, Door?) {
+    private func normalizedProtrusion(forEdge edge: Edge, andRow rowIndex: Int) -> (Double, Door?) {
         if let idx = self.doors[edge]?.firstIndex(where: { (door) -> Bool in
             // TODO: Make position along edge
             // highest coord in the direction lateral to covering must be in doors range

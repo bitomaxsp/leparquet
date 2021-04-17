@@ -77,7 +77,7 @@ public struct Config: Codable {
         }
     }
 
-    struct Layout: Codable {
+    struct Layout: Codable, Equatable {
         enum CodingKeys: String, CodingKey {
             case joints = "type"
             case firstBoard = "first_board"
@@ -94,6 +94,10 @@ public struct Config: Codable {
             guard let _ = first else {
                 throw ValidationError.invalidLayout("Invalid first baord (\(self.firstBoard)), must be one of (\(self.joints.validFirst())")
             }
+            let r = 0.0 ..< 360.0
+            if !r.contains(self.angle) {
+                throw ValidationError.invalidLayout("Andgle must be in range: \(r)")
+            }
         }
     }
 
@@ -102,9 +106,10 @@ public struct Config: Codable {
             case name
             case size
             case doors
+            case layout
             case heightClearance = "height_clearance"
             case widthClearance = "width_clearance"
-            case firstBoard = "first_board"
+//            case firstBoard = "first_board"
             case coverMargin = "cover_margin"
             case minLastRowHeight = "min_last_row_height"
             case desiredLastRowHeight = "desired_last_row_height"
@@ -131,9 +136,10 @@ public struct Config: Codable {
         var name: String = ""
         var size: Size
 
-        // TODO: free joints
-        // regular joints
-        var firstBoard: FirstBoard = .full
+//        var firstBoard: FirstBoard = .full
+        // Layout override
+        var layout: Layout?
+
         // This might be optional
         var doors: [Door]?
 
