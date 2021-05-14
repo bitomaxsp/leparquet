@@ -4,21 +4,18 @@ class RawReport {
     typealias BoardStash = [ReusableBoard]
     typealias InstructionList = [String]
 
-    init(_ config: LayoutEngineConfig, normalizedBoardWidth: Double) {
+    init(_ config: LayoutEngineConfig) {
         self.engineConfig = config
         self.firstRowHeight = Double(config.material.board.size.height)
-        self.normalizedBoardWidth = normalizedBoardWidth
+        self.normalizedBoardWidth = normalizedWholeStep
     }
 
-    let normalizedBoardWidth: Double
+    private let normalizedBoardWidth: Double
     let engineConfig: LayoutEngineConfig
     var boardWidth: Double { return self.engineConfig.material.board.size.width }
-    var boardHeight: Double { return self.engineConfig.material.board.size.height }
-    var boardArea: Measurement<UnitArea> { return self.engineConfig.material.board.area }
-    var roomSize: Config.Size { return self.engineConfig.effectiveRoomSize }
-
-    var firstRowHeight: Double
-    var lastRowHeight = 0.0
+    private var boardHeight: Double { return self.engineConfig.material.board.size.height }
+    private var boardArea: Measurement<UnitArea> { return self.engineConfig.material.board.area }
+    private var roomSize: Config.Size { return self.engineConfig.effectiveRoomSize }
 
     private var rows = [BoardStash]()
     // This is pure trash, middle cuts mostly
@@ -26,9 +23,11 @@ class RawReport {
     private var instructions = InstructionList()
     private var boardsUsed = 0
     private var doors = [Door]()
-    // Amount of boad added in eash row due to the possible doors. Normalized
+    // Tiles length added in eash row due to the possible doors. Normalized
     private var expansions = [Edge: [Double]]()
 
+    var firstRowHeight: Double
+    var lastRowHeight = 0.0
     var unusedHeightInFirstRow: Double = 0.0
     var unusedHeightInLastRow: Double = 0.0
     var totalRows = 0 {
@@ -41,64 +40,14 @@ class RawReport {
         }
     }
 
-    var boardNumWithMargin = 0
+    private var boardNumWithMargin = 0
 
-    // MARK: Implementation
+    // MARK: API
 
-    func newRow() {
-        self.rows.append(BoardStash())
-    }
-
-    func newBoard() -> FloorBoard {
-        defer {
-            self.boardsUsed += 1
-        }
-        return FloorBoard(width: self.normalizedBoardWidth, height: self.boardHeight)
-    }
-
-    func add(board: ReusableBoard) {
-        self.rows[self.rows.count - 1].append(board)
-    }
-
-    func add(instruction: String) {
-        self.instructions.append(instruction)
-    }
-
-    /// Add covered door to report
-    /// - Parameter door: Covered door
-    func add(door: Door) {
-        self.doors.append(door)
-    }
-
-    func add(protrusion: Double, forEdge edge: Edge, inRow rowIndex: Int) {
-        self.expansions[edge]![rowIndex] += protrusion
-    }
-
-    func add(trash: ReusableBoard) {
-//        precondition(trash.width > 0.0, "Zero width trash. Weird!")
-        if (!trash.width.isZero) {
-            self.trashCuts.append(trash)
-        }
-    }
-
-    func append(instruction: String) {
-        if var l = self.instructions.last {
-            l.append(" ")
-            l.append(instruction)
-            self.instructions[self.instructions.count - 1] = l
-        }
-    }
-
-    func collectRests<T>(from: [T]) where T: ReusableBoard {
-        self.trashCuts.append(contentsOf: from)
-        self.trashCuts.sort()
-    }
-
-    func validate() {
+    func validate() throws {
         // Sum of each row: must be equal to effective room width + clearance (included in the door height) + side doors rect height
         // according to how algorithm works
-        var s = ""
-        let summed = self.sumRowLengths(to: &s)
+        let summed = self.sumRowLengths()
 
         // Check is based on prior knowledge about room size, clearance and doors used for layout
         // Thus we make sure we have independent check from how algorithm does layout
@@ -111,7 +60,8 @@ class RawReport {
             let calcWidth = self.engineConfig.actualRoomSize.width + inset
 
             if !rowWidth.nearlyEq(calcWidth) {
-                print("Sanity check not passed for row [\(i)]: rowWidth:\(rowWidth.round(4)) != checkWidth:\(calcWidth)")
+                let err = "Sanity check not passed for row [\(i)]: rowWidth:\(rowWidth.round(4)) != checkWidth:\(calcWidth)"
+                throw ValidationError.reportNotConsistent(err)
             }
         }
     }
@@ -150,7 +100,12 @@ class RawReport {
             return next + b.width
         }
 
-        self.sumRowLengths(to: &ss)
+        let summedRows = self.sumRowLengths()
+        let summedReal = summedRows.map {
+            ($0 * self.boardWidth).round(3, "f")
+        }
+
+        print("\nEach row length (including side doors, no clearance if no door): \(summedReal)\n", to: &ss)
 
         let unused_area = self.boardArea * restWidthSummed
         print("Unusable side trash area: \(unused_area.format(convertedTo: .squareMeters))", to: &ss)
@@ -244,7 +199,7 @@ class RawReport {
     }
 
     @discardableResult
-    private func sumRowLengths(to ss: inout String) -> [Double] {
+    func sumRowLengths() -> [Double] {
         // Sum of each row: must be equal to effective room width + clearance (included in the door height) + side doors rect height
         // according to how algorithm works
         var summed = [Double](repeating: 0.0, count: self.rows.count)
@@ -254,12 +209,11 @@ class RawReport {
             }
         }
 
-        let summedReal = summed.map {
-            ($0 * self.boardWidth).round(3, "f")
-        }
-
-        print("\nEach row length (including side doors, no clearance if no door): \(summedReal)\n", to: &ss)
         return summed
+    }
+
+    func trash() -> BoardStash {
+        return self.trashCuts
     }
 
     private func printRows(to ss: inout String, _ mul: Double = 1.0) {
@@ -290,5 +244,56 @@ class RawReport {
         }
 
         print("\nUnusable rests [\(flavor)]: \(rests)", to: &ss)
+    }
+}
+
+extension RawReport {
+    func newRow() {
+        self.rows.append(BoardStash())
+    }
+
+    func newBoard() -> FloorBoard {
+        defer {
+            self.boardsUsed += 1
+        }
+        return FloorBoard(width: self.normalizedBoardWidth, height: self.boardHeight)
+    }
+
+    func add(board: ReusableBoard) {
+        self.rows[self.rows.count - 1].append(board)
+    }
+
+    func add(instruction: String) {
+        self.instructions.append(instruction)
+    }
+
+    /// Add covered door to report
+    /// - Parameter door: Covered door
+    func add(door: Door) {
+        self.doors.append(door)
+    }
+
+    func add(protrusion: Double, forEdge edge: Edge, inRow rowIndex: Int) {
+        self.expansions[edge]![rowIndex] += protrusion
+    }
+
+    func add(trash: ReusableBoard) {
+        //        precondition(trash.width > 0.0, "Zero width trash. Weird!")
+        if (!trash.width.isZero) {
+            self.trashCuts.append(trash)
+        }
+    }
+
+    func append(instruction: String) {
+        if var l = self.instructions.last {
+            l.append(" ")
+            l.append(instruction)
+            self.instructions[self.instructions.count - 1] = l
+        }
+    }
+
+    func collectRests<T>(from: [T]) where T: ReusableBoard {
+        self.trashCuts.append(contentsOf: from)
+        self.trashCuts.sort()
     }
 }

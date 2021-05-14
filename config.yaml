@@ -14,7 +14,10 @@ width_clearance: 10
 # Could be overriden per room
 min_last_row_height: 60.0
 # You could specify last row (the one at the bottom of the room) board height in mm.
-# Could be overriden per room
+# Could be overriden per room.
+# Set to 0, in which case min_last_row_height is used
+# Set to anything >= min_last_row_height, in which case engine will try to satisfy it
+# If > 0 and < min_last_row_height, capped to min_last_row_height.
 desired_last_row_height: 100.0
 # This is not usind in layout computation.
 # Specify how large area overhead you expect per room to compare it with reality.

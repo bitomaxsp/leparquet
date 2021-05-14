@@ -59,6 +59,15 @@ public struct Config: Codable {
             default: return [.full]
             }
         }
+
+        var step: Double {
+            switch self {
+            case .brick: return 1.0 / 2.0
+            case .deck: return 1.0 / 3.0
+            case .freeJoints: return 0.0 // rest from prev row, if > 300mm .
+            case .fixedJoints: return 0.0 // fixed, set by user
+            }
+        }
     }
 
     enum FirstBoard: String, CaseIterable, Codable {
@@ -88,6 +97,10 @@ public struct Config: Codable {
         var firstBoard: FirstBoard
         /// Degrees. 0˚ is 3 o'clock, 90˚ is 12 o'clock, etc.
         let angle = 0.0
+        /// Amount of normalized distance between joints of adjacent rows
+        var step: Double {
+            self.joints.step
+        }
 
         func validate() throws {
             let first = self.joints.validFirst().first { $0 == self.firstBoard }
@@ -109,7 +122,6 @@ public struct Config: Codable {
             case layout
             case heightClearance = "height_clearance"
             case widthClearance = "width_clearance"
-//            case firstBoard = "first_board"
             case coverMargin = "cover_margin"
             case minLastRowHeight = "min_last_row_height"
             case desiredLastRowHeight = "desired_last_row_height"
@@ -136,7 +148,6 @@ public struct Config: Codable {
         var name: String = ""
         var size: Size
 
-//        var firstBoard: FirstBoard = .full
         // Layout override
         var layout: Layout?
 
@@ -176,11 +187,6 @@ public struct Config: Codable {
     }
 
     var floorChoices = [Floor]()
-
-    enum ValidationError: Error {
-        case badFloorIndex(String)
-        case invalidLayout(String)
-    }
 
     public func validate() throws {
         if let idx = self.floorIndex {

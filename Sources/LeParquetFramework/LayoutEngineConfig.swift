@@ -55,12 +55,12 @@ struct LayoutEngineConfig {
     let insets: Insets
 
     let layout: Layout
-//    let firstBoard: Config.FirstBoard
     let minLastRowHeight: Double
     let desiredLastRowHeight: Double
     let coverMaterialMargin: Double
     let material: Material
     let normalizedLatToolCutWidth: Double
+    // real sizes in mm
     let lonToolCutWidth: Double
     var doors: [Edge: [Door]]?
     /*
@@ -81,8 +81,6 @@ struct LayoutEngineConfig {
         self.floorType = floor.type
         self.actualRoomSize = room.size
         self.layout = room.layout ?? config.layout
-        // Fallback to 1/3 if user input is invalid
-//        self.firstBoard = room.firstBoard
 
         let topInset = room.heightClearance ?? config.heightClearance
         let sideInset = room.widthClearance ?? config.widthClearance
@@ -91,7 +89,14 @@ struct LayoutEngineConfig {
         self.effectiveRoomSize = Size(width: self.actualRoomSize.width - 2.0 * sideInset, height: self.actualRoomSize.height - 2.0 * topInset)
 
         self.minLastRowHeight = room.minLastRowHeight ?? config.minLastRowHeight
-        self.desiredLastRowHeight = room.desiredLastRowHeight ?? config.desiredLastRowHeight
+        self.desiredLastRowHeight = { (_ minLast: Double) -> Double in
+            var desired = room.desiredLastRowHeight ?? config.desiredLastRowHeight
+            if desired > 0.0, desired < minLast {
+                desired = minLast
+            }
+            return desired
+        }(self.minLastRowHeight)
+
         let margin = room.coverMargin ?? config.coverMargin
         precondition(margin >= 0.0 && margin <= 0.5)
         self.coverMaterialMargin = margin

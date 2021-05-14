@@ -24,9 +24,9 @@ final class ConfigTests: XCTestCase {
     }
 
     func testLayoutEngineConfig() {
-        let configGet: () throws -> Config? = {
+        let configGet: (_ yaml: String) throws -> Config? = { yaml in
             do {
-                let config = try self.decoder.decode(Config.self, from: validConfigData_OneFloor_OneRoom)
+                let config = try self.decoder.decode(Config.self, from: yaml)
                 XCTAssertNoThrow(try config.validate(), "Config calidation must be successful")
                 return config
             } catch {
@@ -35,7 +35,7 @@ final class ConfigTests: XCTestCase {
             throw TestError.unableToGetConfig
         }
 
-        guard let config = try? configGet() else { return }
+        guard let config = try? configGet(validConfigData_OneFloor_OneRoom) else { return }
 
         let engineconfig = try! LayoutEngineConfig(config, config.floorChoices[0], config.rooms[0])
 
@@ -54,7 +54,6 @@ final class ConfigTests: XCTestCase {
 
         XCTAssertEqual(engineconfig.insets, Insets(top: topInset, left: sideInset, bottom: topInset, right: sideInset), "Insets mismatch")
 
-//        XCTAssertEqual(engineconfig.firstBoard, room.firstBoard)
         XCTAssertEqual(engineconfig.layout, config.layout)
         XCTAssertEqual(engineconfig.minLastRowHeight, room.minLastRowHeight ?? config.minLastRowHeight)
         XCTAssertEqual(engineconfig.desiredLastRowHeight, room.desiredLastRowHeight ?? config.desiredLastRowHeight)
@@ -91,6 +90,39 @@ final class ConfigTests: XCTestCase {
 
         // We have one door so we can use door value
         XCTAssertEqual(engineconfig.maxNormalizedLeftProtrusion, door.frame.size.height.native, "left protrusion mismatch")
+    }
+
+    func testLayoutEngineConfig_DesiredLastRowHeigh() {
+        var config = yamlConfigWith(yaml: validConfigData_OneFloor_OneRoom)!
+        config.desiredLastRowHeight = 0
+        let engineconfig = try! LayoutEngineConfig(config, config.floorChoices[0], config.rooms[0])
+
+        let room = config.rooms[0]
+
+        XCTAssertEqual(engineconfig.minLastRowHeight, room.minLastRowHeight ?? config.minLastRowHeight)
+        XCTAssertEqual(engineconfig.desiredLastRowHeight, room.desiredLastRowHeight ?? config.desiredLastRowHeight)
+    }
+
+    func testLayoutEngineConfig_DesiredLastRowHeigh_Capped() {
+        var config = yamlConfigWith(yaml: validConfigData_OneFloor_OneRoom)!
+        config.desiredLastRowHeight = 10
+        let engineconfig = try! LayoutEngineConfig(config, config.floorChoices[0], config.rooms[0])
+
+        let room = config.rooms[0]
+
+        XCTAssertEqual(engineconfig.minLastRowHeight, room.minLastRowHeight ?? config.minLastRowHeight)
+        XCTAssertEqual(engineconfig.desiredLastRowHeight, engineconfig.minLastRowHeight)
+    }
+
+    func testLayoutEngineConfig_DesiredLastRowHeigh_Taken() {
+        var config = yamlConfigWith(yaml: validConfigData_OneFloor_OneRoom)!
+        config.desiredLastRowHeight = 79
+        let engineconfig = try! LayoutEngineConfig(config, config.floorChoices[0], config.rooms[0])
+
+        let room = config.rooms[0]
+
+        XCTAssertEqual(engineconfig.minLastRowHeight, room.minLastRowHeight ?? config.minLastRowHeight)
+        XCTAssertEqual(engineconfig.desiredLastRowHeight, config.desiredLastRowHeight)
     }
 
     static var allTests = [

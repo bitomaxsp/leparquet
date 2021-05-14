@@ -4,9 +4,13 @@ public class Report {
     var reports = [RawReport]()
 
     func add(_ rawReport: RawReport) {
-        rawReport.validate()
-        print("Add report for \(rawReport.engineConfig.roomName) room with floor \(rawReport.engineConfig.floorType)")
-        self.reports.append(rawReport)
+        do {
+            try rawReport.validate()
+            print("Add report for \(rawReport.engineConfig.roomName) room with floor \(rawReport.engineConfig.floorType)")
+            self.reports.append(rawReport)
+        } catch {
+            print("Report for \(rawReport.engineConfig.roomName) room with floor \(rawReport.engineConfig.floorType) ingnored. Validation failed with error \(error)")
+        }
     }
 
     public func generateFiles() {
