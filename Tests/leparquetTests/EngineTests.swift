@@ -15,16 +15,17 @@ final class EngineTests: XCTestCase {
     }
 
     func setupEngineWith(_ config: Config) {
+        XCTAssertNoThrow(try config.validate())
         let engineConfig = try! LayoutEngineConfig(config, config.floorChoices[0], config.rooms[0])
         self.engine = RowLayoutEngine(withConfig: engineConfig, debug: config.showCalculations)
     }
 
-    func testEngineLayout_RowsWhenNoLongitudinalCuts_Idempotent() {
+    func testEngineLayout_RowsWhenNoLongitudinalCuts_ForDeck_Idempotent() {
         XCTAssertNoThrow(try self.engine.layout())
         XCTAssertNoThrow(try self.engine.layout())
     }
 
-    func testEngineLayout_RoomWhenHeighMultipleIntegerTiles_NoLongitudinalCuts_Correct() {
+    func testEngineLayout_RoomWhenHeighMultipleIntegerTiles_ForDeck_NoLongitudinalCuts_Correct() {
         let report = try! self.engine.layout()
 
         XCTAssertEqual(report.totalRows, 20, "Unexpected number of rows")
@@ -35,7 +36,7 @@ final class EngineTests: XCTestCase {
         XCTAssertNoThrow(try report.validate())
     }
 
-    func testEngineLayout_RoomWhenHeighNotMultipleIntegerTiles_Has2LongitudinalCuts_Correct() {
+    func testEngineLayout_RoomWhenHeighNotMultipleIntegerTiles_ForDeck_Has2LongitudinalCuts_Correct() {
         // Change room heigh
         self.config.rooms[0].size.height = 2050
         self.setupEngineWith(self.config)
@@ -52,7 +53,7 @@ final class EngineTests: XCTestCase {
         XCTAssertNoThrow(try report.validate())
     }
 
-    func testEngineLayout_RoomWhenHeighNotMultipleIntegerTiles_LastRowDesiredHeight_Correct() {
+    func testEngineLayout_RoomWhenHeighNotMultipleIntegerTiles_ForDeck_LastRowDesiredHeight_Correct() {
         // Change room heigh
         self.config.rooms[0].size.height = 2090
         self.config.desiredLastRowHeight = 80
@@ -71,8 +72,11 @@ final class EngineTests: XCTestCase {
     }
 
     // TODO: Add trash length check
-    func engineLayoutCheck(withBoardWidth boardWidth: Double, roomWidth: Double?, roomHeight: Double?, latToolCutWidth: Double, expectedRowCount: Int, trashCount: Int) {
+    func engineLayoutCheck(withBoardWidth boardWidth: Double, roomWidth: Double?, roomHeight: Double?, latToolCutWidth: Double, joints: Config.Joints?, expectedRowCount: Int, trashCount: Int) {
         // Use ideal tool
+        if let joints = joints {
+            self.config.layout = Config.Layout(joints: joints, firstBoard: joints.validFirst()[0])
+        }
         self.config.latToolCutWidth = latToolCutWidth
         self.config.floorChoices[0].boardSize.width = boardWidth
         if let roomWidth = roomWidth {
@@ -99,39 +103,58 @@ final class EngineTests: XCTestCase {
         XCTAssertNoThrow(try report.validate())
     }
 
-    func testEngineLayout_RoomWhenWidthMultipleIntegerTilesWidth_RowsWidth_Correct() {
+    func testEngineLayout_RoomWhenWidthMultipleIntegerTilesWidth_ForDeck_RowsWidth_Correct() {
         let boardWidth = 1999.0
 
-        // Use ideal tool
         for k in 1 ..< 100 {
-            self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: Double(k) * boardWidth, roomHeight: nil, latToolCutWidth: 0.0, expectedRowCount: 20, trashCount: 0)
+            self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: Double(k) * boardWidth, roomHeight: nil, latToolCutWidth: 0.0, joints: nil, expectedRowCount: 20, trashCount: 0)
         }
     }
 
     func testEngineLayout_RoomWhenWidthMultipleOneThirdTilesWidth_ForDeck_RowsWidth_Correct() {
         let boardWidth = 1500.0
         let rows = 3.0
-        let roomHeight = 100.0 * rows
+        let roomHeight = self.config.floorChoices[0].boardSize.height * rows
 
-        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 3 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 0)
-        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 4 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 0)
-        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 5 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 3)
-        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 6 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 0)
-        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 7 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 0)
-        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 8 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 3)
-        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 9 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 0)
-        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 10 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 0)
-        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 11 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 3)
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 3 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, joints: nil, expectedRowCount: Int(rows), trashCount: 0)
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 4 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, joints: nil, expectedRowCount: Int(rows), trashCount: 0)
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 5 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, joints: nil, expectedRowCount: Int(rows), trashCount: 3)
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 6 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, joints: nil, expectedRowCount: Int(rows), trashCount: 0)
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 7 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, joints: nil, expectedRowCount: Int(rows), trashCount: 0)
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 8 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, joints: nil, expectedRowCount: Int(rows), trashCount: 3)
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 9 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, joints: nil, expectedRowCount: Int(rows), trashCount: 0)
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 10 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, joints: nil, expectedRowCount: Int(rows), trashCount: 0)
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 11 * boardWidth / 3.0, roomHeight: roomHeight, latToolCutWidth: 0.0, joints: nil, expectedRowCount: Int(rows), trashCount: 3)
     }
 
     func testEngineLayout_RoomWhenWidthMultipleOneHalfTilesWidth_ForDeck_RowsWidth_Correct() {
         let boardWidth = 1500.0
         let denom = 2.0
         let rows = 3.0
-        let roomHeight = 100.0 * rows
+        let roomHeight = self.config.floorChoices[0].boardSize.height * rows
 
         for i in stride(from: 3.0, to: 100.0, by: 2.0) {
-            self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: i * boardWidth / denom, roomHeight: roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 4)
+            self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: i * boardWidth / denom, roomHeight: roomHeight, latToolCutWidth: 0.0, joints: nil, expectedRowCount: Int(rows), trashCount: 4)
+        }
+    }
+
+    func testEngineLayout_RoomWhenWidthMultipleIntegerTilesWidth_UseBrick_RowsWidth_Correct() {
+        let boardWidth = 1285.0
+
+        // Use ideal tool
+        for k in 1 ..< 100 {
+            self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: Double(k) * boardWidth, roomHeight: nil, latToolCutWidth: 0.0, joints: .brick, expectedRowCount: 20, trashCount: 0)
+        }
+    }
+
+    func testEngineLayout_RoomWhenWidthMultipleOneHalfTilesWidth_UseBrick_RowsWidth_Correct() {
+        let boardWidth = 1500.0
+        let denom = 2.0
+        let rows = 2.0
+        let roomHeight = self.config.floorChoices[0].boardSize.height * rows
+
+        for i in stride(from: 3.0, to: 100.0, by: 2.0) {
+            self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: i * boardWidth / denom, roomHeight: roomHeight, latToolCutWidth: 0.0, joints: .brick, expectedRowCount: Int(rows), trashCount: 0)
         }
     }
 

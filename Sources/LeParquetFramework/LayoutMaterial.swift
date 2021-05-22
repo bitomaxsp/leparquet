@@ -54,4 +54,40 @@ struct LayoutMaterial {
         case .aligned: return 0.0
         }
     }
+
+    func startBoardWidth(forRowAtIndex index: Int) -> Double {
+        switch self.layout.joints {
+        case .brick: return self.startWidthBrick(forRowIndex: index)
+        case .deck: return self.startWidthDeck(forRowIndex: index)
+        case .freeJoints: return self.startWidthFreeJoints(forRowIndex: index)
+        case .fixedJoints: return self.startWidthFixedJoints(forRowIndex: index)
+        case .aligned: return self.startWidthAlignedJoints(forRowIndex: index)
+        }
+    }
+
+    private func startWidthDeck(forRowIndex index: Int) -> Double {
+        let startLength = self.layout.firstBoard.lengthAsDouble()
+        var next = startLength + self.adjacentRowsShift * Double(index % 3)
+        while next > NormalizedWholeStep {
+            next -= NormalizedWholeStep
+        }
+        return next
+    }
+
+    private func startWidthBrick(forRowIndex index: Int) -> Double {
+        let startLength = self.layout.firstBoard.lengthAsDouble()
+        var next = startLength + self.adjacentRowsShift * Double(index % 2)
+        while next > NormalizedWholeStep {
+            next -= NormalizedWholeStep
+        }
+        return next
+    }
+
+    private func startWidthFreeJoints(forRowIndex index: Int) -> Double { 0.0 }
+    private func startWidthFixedJoints(forRowIndex index: Int) -> Double { 0.0 }
+    private func startWidthAlignedJoints(forRowIndex index: Int) -> Double { 0.0 }
 }
+
+// extension LayoutMaterial {
+//    private func deck
+// }

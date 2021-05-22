@@ -55,7 +55,7 @@ public struct Config: Codable {
 
         func validFirst() -> [FirstBoard] {
             switch self {
-            case .brick: return [.full, .half]
+            case .brick: return [.half, .full]
             case .deck: return [.one_3, .two_3, .full]
             default: return [.full]
             }
@@ -85,8 +85,8 @@ public struct Config: Codable {
             case angle
         }
 
-        var joints: Joints
-        var firstBoard: FirstBoard
+        let joints: Joints
+        let firstBoard: FirstBoard
         /// Degrees. 0˚ is 3 o'clock, 90˚ is 12 o'clock, etc.
         let angle = 0.0
 

@@ -247,25 +247,12 @@ public class RowLayoutEngine {
                 self.report.add(board: board!)
             }
             // Update step before new row
-            cutLength = self.nextRowFirstLength(rowIndex)
-        }
+            cutLength = self.engineConfig.material.startBoardWidth(forRowAtIndex: rowIndex + 1)
+        } // end for rowIndex
 
         if self.debug {
             print("-------------------------------- DONE")
         }
-    }
-
-    private func nextRowFirstLength(_ rowIndex: Int) -> Double {
-        let startLength = self.engineConfig.material.layout.firstBoard.lengthAsDouble()
-        let step = self.engineConfig.material.adjacentRowsShift
-        let r = rowIndex % 3
-
-        var nexts = startLength + step + step * Double(r)
-        if nexts > NormalizedWholeStep {
-            nexts -= NormalizedWholeStep
-        }
-
-        return nexts
     }
 
     // return used cut
