@@ -1,6 +1,7 @@
 import Foundation
 
 let normalizedWholeStep = 1.0
+let DiffCompareEpsilon = 1e-7 // seems good enough
 
 public class RowLayoutEngine {
     private typealias Stash = RawReport.BoardStash
@@ -129,7 +130,8 @@ public class RowLayoutEngine {
     private func normalizedWidthCalculation() throws {
         let boardWidth = self.engineConfig.material.board.size.width
         var cutLength = self.engineConfig.layout.firstBoard.lengthAsDouble()
-
+        
+        precondition(boardWidth > 0.0, "board width must be greater than zero")
         precondition(cutLength > 0.0 && cutLength <= 1.0, "Initial cutLength not in range")
 
         /*
@@ -214,10 +216,9 @@ public class RowLayoutEngine {
             // Make row shorter by the amount of cut
             // Add right protrusion to account it in row length
             let reducedNormalizedRoomWidth = normalizedRoomWidth - leftCutAmount + rightProtrusion
-            
+
             // We calculate cover diff to account small rounding errors
-            let cover_epsilon = 1e-6 // TODO: Pick good enough value
-            while (reducedNormalizedRoomWidth - rowCovered) > cover_epsilon {
+            while (reducedNormalizedRoomWidth - rowCovered) > DiffCompareEpsilon {
                 board = nil
                 cutLength = min(normalizedWholeStep, Double(reducedNormalizedRoomWidth - rowCovered))
 
@@ -361,25 +362,20 @@ public class RowLayoutEngine {
             }
 
             if let idx = stash.firstIndex(where: {
-                // TODO: how to deal with - diff
                 // When we search a cut we need to account for tool cut width
-                let diff = $0.width - (cutLength + self.engineConfig.normalizedLatToolCutWidth)
-                // If cuts are close to each other or too far
-                let b1 = $0.width.nearlyEq(cutLength)
-                let b2 = diff > Double.ulpOfOne
+                // If cuts are very close to each other or board we search longer then we need
+                let b1 = $0.width.nearlyEq(cutLength, DiffCompareEpsilon)
+                let b2 = $0.width > cutLength // self.engineConfig.normalizedLatToolCutWidth
                 return b1 || b2
             }) {
                 let board = stash.remove(at: idx)
-
-//                precondition(board.width - (cutLength + self.engineConfig.normalizedLatToolCutWidth) > Double.ulpOfOne || board.width.nearlyEq(cutLength))
 
                 if self.debug {
                     print("Found reusable \(T.self) part: \(board.width.round(4)), using \(cutLength.round(4)) of it")
                 }
 
                 // Use own eps eq to avoid rounding errors
-                // TODO: Use diff and epsilon!
-                if board.width.eq(cutLength) {
+                if (board.width - cutLength) <= DiffCompareEpsilon {
                     return board
                 }
 
