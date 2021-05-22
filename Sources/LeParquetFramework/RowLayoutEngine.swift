@@ -1,6 +1,6 @@
 import Foundation
 
-let normalizedWholeStep = 1.0
+let NormalizedWholeStep = 1.0
 let DiffCompareEpsilon = 1e-7 // seems good enough
 
 public class RowLayoutEngine {
@@ -129,8 +129,8 @@ public class RowLayoutEngine {
 
     private func normalizedWidthCalculation() throws {
         let boardWidth = self.engineConfig.material.board.size.width
-        var cutLength = self.engineConfig.layout.firstBoard.lengthAsDouble()
-        
+        var cutLength = self.engineConfig.material.layout.firstBoard.lengthAsDouble()
+
         precondition(boardWidth > 0.0, "board width must be greater than zero")
         precondition(cutLength > 0.0 && cutLength <= 1.0, "Initial cutLength not in range")
 
@@ -199,7 +199,7 @@ public class RowLayoutEngine {
             }
 
             // Use whole board if we in the middle
-            cutLength = normalizedWholeStep
+            cutLength = NormalizedWholeStep
 
             // Look right doors to account right cut length
             let (rightProtrusion, door) = self.normalizedProtrusion(forEdge: .right, andRow: rowIndex)
@@ -220,17 +220,17 @@ public class RowLayoutEngine {
             // We calculate cover diff to account small rounding errors
             while (reducedNormalizedRoomWidth - rowCovered) > DiffCompareEpsilon {
                 board = nil
-                cutLength = min(normalizedWholeStep, Double(reducedNormalizedRoomWidth - rowCovered))
+                cutLength = min(NormalizedWholeStep, Double(reducedNormalizedRoomWidth - rowCovered))
 
                 if self.debug {
                     print("Row:\(rowIndex) Step: \(cutLength.round(4))")
                 }
 
-                if cutLength == normalizedWholeStep {
+                if cutLength == NormalizedWholeStep {
                     board = self.report.newBoard()
                     self.report.add(instruction: "Take new board from the pack. Put in the row.")
 
-                } else if cutLength < normalizedWholeStep {
+                } else if cutLength < NormalizedWholeStep {
                     board = self.useBoardFromRightStash(cutLength)
                     // Right reused from stash if we have it with required length
                     if board == nil {
@@ -256,13 +256,13 @@ public class RowLayoutEngine {
     }
 
     private func nextRowFirstLength(_ rowIndex: Int) -> Double {
-        let startLength = self.engineConfig.layout.firstBoard.lengthAsDouble()
-        let step = self.engineConfig.layout.step // Double(1, 3)
+        let startLength = self.engineConfig.material.layout.firstBoard.lengthAsDouble()
+        let step = self.engineConfig.material.adjacentRowsShift
         let r = rowIndex % 3
 
         var nexts = startLength + step + step * Double(r)
-        if nexts > normalizedWholeStep {
-            nexts -= normalizedWholeStep
+        if nexts > NormalizedWholeStep {
+            nexts -= NormalizedWholeStep
         }
 
         return nexts
@@ -275,7 +275,7 @@ public class RowLayoutEngine {
         let board = self.report.newBoard()
         self.report.add(instruction: "Take new board from the pack.")
 
-        if cutLength < normalizedWholeStep {
+        if cutLength < NormalizedWholeStep {
             let (left, right) = board.cutAlongWidth(atDistance: cutLength, from: .left, cutWidth: self.engineConfig.normalizedLatToolCutWidth)
             precondition(left.width.eq(cutLength), "left.width must be cutLength")
 
@@ -285,7 +285,7 @@ public class RowLayoutEngine {
             self.report.append(instruction: "Put LEFT cut in the row. Mark RIGHT cut as \(right.mark).")
 
             // Collect usable only if it grater than smallest cutLength for the last which 1/3 for the deck layout
-            if right.width >= Double(1, 3) { // TODO: min row step (runout)
+            if right.width >= self.engineConfig.material.adjacentRowsShift {
                 if self.debug {
                     print("Save reusable \(right) for the left side: \(right.width.round(4))")
                 }
@@ -311,7 +311,7 @@ public class RowLayoutEngine {
         let board = self.report.newBoard()
         self.report.add(instruction: "Take new board from the pack.")
 
-        if cutLength < normalizedWholeStep {
+        if cutLength < NormalizedWholeStep {
             let (left, right) = board.cutAlongWidth(atDistance: cutLength, from: .right, cutWidth: self.engineConfig.normalizedLatToolCutWidth)
             precondition(right.width.eq(cutLength), "right.width must be cutLength")
 

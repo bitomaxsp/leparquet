@@ -4,7 +4,7 @@ import LeParquetFramework
 import Yams
 
 extension LeParquet {
-    struct Deck: ParsableCommand {
+    struct Layout: ParsableCommand {
         static let configuration = CommandConfiguration(abstract: "Calculate deck layout",
                                                         shouldDisplay: true)
 

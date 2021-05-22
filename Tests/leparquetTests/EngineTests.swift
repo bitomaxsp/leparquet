@@ -101,7 +101,7 @@ final class EngineTests: XCTestCase {
 
     func testEngineLayout_RoomWhenWidthMultipleIntegerTilesWidth_RowsWidth_Correct() {
         let boardWidth = 1999.0
-        
+
         // Use ideal tool
         for k in 1 ..< 100 {
             self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: Double(k) * boardWidth, roomHeight: nil, latToolCutWidth: 0.0, expectedRowCount: 20, trashCount: 0)
@@ -129,8 +129,8 @@ final class EngineTests: XCTestCase {
         let denom = 2.0
         let rows = 3.0
         let roomHeight = 100.0 * rows
-        
-        for i in stride(from: 3.0, to: 100.0, by: 2.0){
+
+        for i in stride(from: 3.0, to: 100.0, by: 2.0) {
             self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: i * boardWidth / denom, roomHeight: roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 4)
         }
     }
@@ -196,7 +196,7 @@ longitudinal_tool_cut_width: 2.5
 layout:
   type: deck
   first_board: 1/3 # or "full"
-  angle: 1
+  angle: 0
 
 rooms:
  - name: "small"  # Room name to identify it later

@@ -51,21 +51,13 @@ public struct Config: Codable {
         case deck
         case freeJoints = "free joints"
         case fixedJoints = "fixed joints"
+        case aligned
 
         func validFirst() -> [FirstBoard] {
             switch self {
             case .brick: return [.full, .half]
             case .deck: return [.one_3, .two_3, .full]
             default: return [.full]
-            }
-        }
-
-        var step: Double {
-            switch self {
-            case .brick: return 1.0 / 2.0
-            case .deck: return 1.0 / 3.0
-            case .freeJoints: return 0.0 // rest from prev row, if > 300mm .
-            case .fixedJoints: return 0.0 // fixed, set by user
             }
         }
     }
@@ -97,10 +89,6 @@ public struct Config: Codable {
         var firstBoard: FirstBoard
         /// Degrees. 0˚ is 3 o'clock, 90˚ is 12 o'clock, etc.
         let angle = 0.0
-        /// Amount of normalized distance between joints of adjacent rows
-        var step: Double {
-            self.joints.step
-        }
 
         func validate() throws {
             let first = self.joints.validFirst().first { $0 == self.firstBoard }

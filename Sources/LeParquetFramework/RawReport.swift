@@ -7,7 +7,7 @@ class RawReport {
     init(_ config: LayoutEngineConfig) {
         self.engineConfig = config
         self.firstRowHeight = Double(config.material.board.size.height)
-        self.normalizedBoardWidth = normalizedWholeStep
+        self.normalizedBoardWidth = NormalizedWholeStep
     }
 
     private let normalizedBoardWidth: Double

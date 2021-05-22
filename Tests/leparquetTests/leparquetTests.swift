@@ -54,7 +54,7 @@ final class ConfigTests: XCTestCase {
 
         XCTAssertEqual(engineconfig.insets, Insets(top: topInset, left: sideInset, bottom: topInset, right: sideInset), "Insets mismatch")
 
-        XCTAssertEqual(engineconfig.layout, config.layout)
+        XCTAssertEqual(engineconfig.material.layout, config.layout)
         XCTAssertEqual(engineconfig.minLastRowHeight, room.minLastRowHeight ?? config.minLastRowHeight)
         XCTAssertEqual(engineconfig.desiredLastRowHeight, room.desiredLastRowHeight ?? config.desiredLastRowHeight)
         XCTAssertEqual(engineconfig.coverMaterialMargin, room.coverMargin ?? config.coverMargin)

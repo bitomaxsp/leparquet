@@ -5,45 +5,6 @@ let maxClearance_mm = 30.0
 
 struct LayoutEngineConfig {
     typealias Size = Config.Size
-    typealias Layout = Config.Layout
-
-    struct Material {
-        init(_ floor: Config.Floor) {
-            let area = floor.boardSize.height * floor.boardSize.width
-            self.board = Material.Board(size: floor.boardSize, area: Measurement(value: area, unit: UnitArea.squareMillimeters))
-            let packArea = floor.packArea == nil ? nil : Measurement(value: floor.packArea!, unit: UnitAreaPerPack.squareMeters)
-            let bpp = floor.boardsPerPack == nil ? nil : Measurement<UnitBoardsPerPack>(value: Double(floor.boardsPerPack!), unit: .boards)
-
-            var weight: Measurement<UnitMass>?
-            if let m = floor.packWeight {
-                weight = Measurement<UnitMass>(value: m, unit: .kilograms)
-            }
-
-            self.pack = Material.Pack(area: packArea, boardsCount: bpp, pricePerM2: floor.pricePerM2, weight: weight)
-
-            self.type = floor.type
-            self.name = floor.name
-            self.notes = floor.notes
-        }
-
-        struct Board {
-            let size: Size
-            let area: Measurement<UnitArea>
-        }
-
-        struct Pack {
-            let area: Measurement<UnitAreaPerPack>?
-            let boardsCount: Measurement<UnitBoardsPerPack>?
-            let pricePerM2: Double?
-            let weight: Measurement<UnitMass>?
-        }
-
-        let board: Board
-        let pack: Pack
-        let type: String
-        let name: String
-        let notes: String?
-    }
 
     let roomName: String
     let floorName: String
@@ -54,11 +15,10 @@ struct LayoutEngineConfig {
     /// Positive values means that rectangle to which insets are applied is reduced by them
     let insets: Insets
 
-    let layout: Layout
     let minLastRowHeight: Double
     let desiredLastRowHeight: Double
     let coverMaterialMargin: Double
-    let material: Material
+    let material: LayoutMaterial
     let normalizedLatToolCutWidth: Double
     // real sizes in mm
     let lonToolCutWidth: Double
@@ -80,7 +40,6 @@ struct LayoutEngineConfig {
         self.floorName = floor.name
         self.floorType = floor.type
         self.actualRoomSize = room.size
-        self.layout = room.layout ?? config.layout
 
         let topInset = room.heightClearance ?? config.heightClearance
         let sideInset = room.widthClearance ?? config.widthClearance
@@ -100,7 +59,7 @@ struct LayoutEngineConfig {
         let margin = room.coverMargin ?? config.coverMargin
         precondition(margin >= 0.0 && margin <= 0.5)
         self.coverMaterialMargin = margin
-        self.material = Material(floor)
+        self.material = LayoutMaterial(floor, room.layout ?? config.layout)
 
         self.normalizedLatToolCutWidth = config.latToolCutWidth / self.material.board.size.width
         self.lonToolCutWidth = config.lonToolCutWidth
