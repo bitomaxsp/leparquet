@@ -29,6 +29,7 @@ extension LeParquet {
             let layout = LayoutProducer(config: config, verbose: self.verbose == nil ? nil : true)
             let report = try layout.calculate()
             report.generateFiles()
+            report.generateGraphics()
         }
     }
 }

@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 
 class RawReport {
@@ -295,5 +296,99 @@ extension RawReport {
     func collectRests<T>(from: [T]) where T: ReusableBoard {
         self.trashCuts.append(contentsOf: from)
         self.trashCuts.sort()
+    }
+}
+
+extension RawReport {
+    enum ImageErrors: Error {
+        case contextCreationFailed(String)
+        case saveFailed(String)
+        case cantRenderImage
+    }
+
+    func layoutImage(toFile file: URL) throws {
+        let topMargin = 2 * 300
+        let sideMargin = 2 * 400
+        let result = self.createBitmapContext(pixelsWide: Int(self.roomSize.width) + sideMargin, pixelsHigh: Int(self.roomSize.height) + topMargin)
+        if case .success(let ctx) = result {
+            self.draw(inContext: ctx)
+
+            guard let image = ctx.makeImage() else {
+                throw ImageErrors.cantRenderImage
+            }
+
+            guard let destination = CGImageDestinationCreateWithURL(file.appendingPathExtension("png") as CFURL, kUTTypePNG, 1, nil) else {
+                throw ImageErrors.saveFailed("CGImageDestinationCreateWithURL failed")
+            }
+
+            CGImageDestinationAddImage(destination, image, nil)
+            CGImageDestinationFinalize(destination)
+
+        } else if case .failure(let error) = result {
+            print("Error saving image file \(file): \(error)")
+        }
+    }
+
+    private func createBitmapContext(pixelsWide: Int, pixelsHigh: Int) -> Result<CGContext, Error> {
+        let cs = CGColorSpace(name: CGColorSpace.sRGB)
+        guard let colorSpace = cs else {
+            return .failure(ImageErrors.contextCreationFailed("colorSpace is nil"))
+        }
+        let context = CGContext(data: nil,
+                                width: pixelsWide,
+                                height: pixelsHigh,
+                                bitsPerComponent: 8,
+                                bytesPerRow: 0,
+                                space: colorSpace,
+                                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+
+        guard context != nil else {
+            return .failure(ImageErrors.contextCreationFailed("context is nil"))
+        }
+
+        return .success(context!)
+    }
+
+    private func setup(context ctx: CGContext) {
+        ctx.setAllowsAntialiasing(true)
+        // Invert Y axis so the we have simple height calculations
+        ctx.translateBy(x: 0, y: CGFloat(ctx.height))
+        ctx.scaleBy(x: 1, y: -1)
+        ctx.setBlendMode(.normal)
+    }
+
+    private func draw(inContext ctx: CGContext) {
+        self.setup(context: ctx)
+        let borderColor = CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 1)
+
+        // Fill BG
+        ctx.setFillColor(CGColor(red: 255, green: 255, blue: 255, alpha: 1))
+        ctx.fill(CGRect(x: 0, y: 0, width: ctx.width, height: ctx.height))
+
+        ctx.setStrokeColor(borderColor)
+        ctx.setLineWidth(4.0)
+        ctx.setFillColor(gray: 0.72, alpha: 1.0) // Gray fill
+
+        // TODO: Clearance in config
+        var x = 100.0
+        var y = 100.0
+        _ = self.rows.map { (r) -> [CGRect] in
+            let v = r.map { (b) -> CGRect in
+                let w = b.width * self.engineConfig.material.board.size.width
+                let r = CGRect(x: x, y: y, width: w, height: b.height)
+                x += w
+                return r
+            }
+            y += v[0].height.native
+            x = 100.0
+
+            ctx.fill(v) // This invalidates the path
+            ctx.addRects(v) // added here on previous iteration
+            ctx.strokePath() // so we need to stroke them
+            return v
+        }
+
+        // TODO: draw room rect
+        // TODO: fraw doors in dark gray
     }
 }

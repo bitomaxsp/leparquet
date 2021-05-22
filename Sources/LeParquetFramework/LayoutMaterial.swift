@@ -51,7 +51,7 @@ struct LayoutMaterial {
         case .deck: return 1.0 / 3.0
         case .freeJoints: return Self.MinFreeJointsBoardWidth / self.board.size.width // rest from prev row, if > 300mm .
         case .fixedJoints: return self.board.size.height / self.board.size.width // fixed, set by user
-        case .aligned: return 0.0
+        case .tiles: return 0.0
         }
     }
 
@@ -61,7 +61,7 @@ struct LayoutMaterial {
         case .deck: return self.startWidthDeck(forRowIndex: index)
         case .freeJoints: return self.startWidthFreeJoints(forRowIndex: index)
         case .fixedJoints: return self.startWidthFixedJoints(forRowIndex: index)
-        case .aligned: return self.startWidthAlignedJoints(forRowIndex: index)
+        case .tiles: return self.startWidthOnTiles(forRowIndex: index)
         }
     }
 
@@ -85,7 +85,7 @@ struct LayoutMaterial {
 
     private func startWidthFreeJoints(forRowIndex index: Int) -> Double { 0.0 }
     private func startWidthFixedJoints(forRowIndex index: Int) -> Double { 0.0 }
-    private func startWidthAlignedJoints(forRowIndex index: Int) -> Double { 0.0 }
+    private func startWidthOnTiles(forRowIndex index: Int) -> Double { NormalizedWholeStep }
 }
 
 // extension LayoutMaterial {

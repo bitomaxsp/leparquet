@@ -158,7 +158,8 @@ public class RowLayoutEngine {
             self.report.add(instruction: "Start row #\(rowIndex + 1):")
             var rowCovered = 0.0
 
-            // Amount of left cut due to protrusion
+            // If there doors on the left we shift layout on the anmout of max protrusion and cut the rests
+            // leftCutAmount: Amount of left protrusion that needs to be cut
             var leftCutAmount = 0.0
             if maximumLeftProtrusion > 0.0 {
                 // Look left doors to account left cut length

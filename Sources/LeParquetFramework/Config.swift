@@ -51,7 +51,7 @@ public struct Config: Codable {
         case deck
         case freeJoints = "free joints"
         case fixedJoints = "fixed joints"
-        case aligned
+        case tiles
 
         func validFirst() -> [FirstBoard] {
             switch self {
@@ -83,12 +83,15 @@ public struct Config: Codable {
             case joints = "type"
             case firstBoard = "first_board"
             case angle
+            case tileClearance = "tile_clearance"
         }
 
         let joints: Joints
         let firstBoard: FirstBoard
         /// Degrees. 0˚ is 3 o'clock, 90˚ is 12 o'clock, etc.
         let angle = 0.0
+        /// Clearance between adjancent tiles in mm
+        let tileClearance = 0.0
 
         func validate() throws {
             let first = self.joints.validFirst().first { $0 == self.firstBoard }
@@ -184,5 +187,10 @@ public struct Config: Codable {
         }
 
         try self.layout.validate()
+        for r in self.rooms {
+            if let l = r.layout {
+                try l.validate()
+            }
+        }
     }
 }

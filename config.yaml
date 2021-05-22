@@ -53,6 +53,10 @@ layout:
 #   type: fixed-joints
 #   first_board: "full"
 
+# layout:
+#   type: aligned
+#   first_board: "full"
+
 # Array of rooms you would like to calculate layout for
 rooms:
   - name: "small"  # Room name to identify it later
@@ -60,13 +64,10 @@ rooms:
       # Room height in mm (from top to bottom, measured between walls)
       height: 2110
       # Room width  in mm (from left to right (layout direction), measured between walls)
-      width: 3800
+      width: 3854
 
     # Cover margin override for this room
     cover_margin: 0.1
-    # Length (width) of thefFirst board in the first row
-    # Valid value: "full", "1/3", "2/3"
-    first_board: 2/3
 
     # doors array is optional,
     # Doors must not intersect

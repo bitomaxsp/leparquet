@@ -30,4 +30,11 @@ public class Report {
             }
         }
     }
+
+    public func generateGraphics() {
+        for report in self.reports {
+            let filename = URL(fileURLWithPath: "./\(report.engineConfig.roomName)+\(report.engineConfig.floorType)")
+            try? report.layoutImage(toFile: filename)
+        }
+    }
 }
