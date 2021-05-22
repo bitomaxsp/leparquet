@@ -214,7 +214,10 @@ public class RowLayoutEngine {
             // Make row shorter by the amount of cut
             // Add right protrusion to account it in row length
             let reducedNormalizedRoomWidth = normalizedRoomWidth - leftCutAmount + rightProtrusion
-            while rowCovered < reducedNormalizedRoomWidth {
+            
+            // We calculate cover diff to account small rounding errors
+            let cover_epsilon = 1e-6 // TODO: Pick good enough value
+            while (reducedNormalizedRoomWidth - rowCovered) > cover_epsilon {
                 board = nil
                 cutLength = min(normalizedWholeStep, Double(reducedNormalizedRoomWidth - rowCovered))
 
@@ -231,7 +234,7 @@ public class RowLayoutEngine {
                     // Right reused from stash if we have it with required length
                     if board == nil {
                         // Or new one and save the rest
-                        board = self.useWholeBoardOnTheRightSide(cutLength)
+                        board = self.useWholeBoardOnTheRightSide(withLength: cutLength)
                     } else {
                         // Step: Take board marked with X from right stash
                         self.report.add(instruction: "Take board marked as \(board!.mark) and put it in the row.")
@@ -265,7 +268,7 @@ public class RowLayoutEngine {
     }
 
     // return used cut
-    private func useWholeBoardOnTheRightSide(_ cutLength: Double) -> ReusableBoard {
+    private func useWholeBoardOnTheRightSide(withLength cutLength: Double) -> ReusableBoard {
         precondition(cutLength > 0.0, "Cut must be greater than 0")
 
         let board = self.report.newBoard()
@@ -277,7 +280,7 @@ public class RowLayoutEngine {
 
             // Step: Cut in two
             let aCut = self.normalized(width: cutLength, to: UnitLength.millimeters)
-            self.report.append(instruction: "Cut \(aCut) from the left side.")
+            self.report.append(instruction: "Measure \(aCut) from the left side and cur it.")
             self.report.append(instruction: "Put LEFT cut in the row. Mark RIGHT cut as \(right.mark).")
 
             // Collect usable only if it grater than smallest cutLength for the last which 1/3 for the deck layout
@@ -304,18 +307,16 @@ public class RowLayoutEngine {
     private func useWholeBoardOnTheLeftSide(withLength cutLength: Double) -> ReusableBoard {
         precondition(cutLength > 0.0, "Cut must be greater than 0")
 
-        // Take new board
         let board = self.report.newBoard()
         self.report.add(instruction: "Take new board from the pack.")
 
-        // Determine rest from left to right side
         if cutLength < normalizedWholeStep {
             let (left, right) = board.cutAlongWidth(atDistance: cutLength, from: .right, cutWidth: self.engineConfig.normalizedLatToolCutWidth)
             precondition(right.width.eq(cutLength), "right.width must be cutLength")
 
             // Step: Cut in two
             let aCut = self.normalized(width: cutLength, to: UnitLength.millimeters)
-            self.report.append(instruction: "Cut \(aCut) from the right side.")
+            self.report.append(instruction: "Measure \(aCut) from the right side and cut it.")
             self.report.append(instruction: "Put RIGHT cut in the row. Mark LEFT cut as \(left.mark).")
 
             self.stash(left: left)
@@ -360,20 +361,24 @@ public class RowLayoutEngine {
             }
 
             if let idx = stash.firstIndex(where: {
+                // TODO: how to deal with - diff
                 // When we search a cut we need to account for tool cut width
                 let diff = $0.width - (cutLength + self.engineConfig.normalizedLatToolCutWidth)
                 // If cuts are close to each other or too far
-                return $0.width.eq(cutLength) || diff > Double.ulpOfOne
+                let b1 = $0.width.nearlyEq(cutLength)
+                let b2 = diff > Double.ulpOfOne
+                return b1 || b2
             }) {
                 let board = stash.remove(at: idx)
 
-                precondition(board.width - (cutLength + self.engineConfig.normalizedLatToolCutWidth) > Double.ulpOfOne || board.width.eq(cutLength))
+//                precondition(board.width - (cutLength + self.engineConfig.normalizedLatToolCutWidth) > Double.ulpOfOne || board.width.nearlyEq(cutLength))
 
                 if self.debug {
                     print("Found reusable \(T.self) part: \(board.width.round(4)), using \(cutLength.round(4)) of it")
                 }
 
-                // Use own eq to avoid rounding errors
+                // Use own eps eq to avoid rounding errors
+                // TODO: Use diff and epsilon!
                 if board.width.eq(cutLength) {
                     return board
                 }
@@ -453,7 +458,9 @@ public class RowLayoutEngine {
     }
 
     private func coverHorizontalDoorsUsingRests() {
-        print("Trying to cover top and bottom door passages")
+        if (self.debug) {
+            print("Trying to cover top and bottom door passages")
+        }
         // Sort: DESC
         self.reusableRight.sort(by: >)
         self.reusableLeft.sort(by: >)

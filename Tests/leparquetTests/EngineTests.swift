@@ -70,26 +70,58 @@ final class EngineTests: XCTestCase {
         XCTAssertNoThrow(try report.validate())
     }
 
-    func testEngineLayout_RoomWhenWidthMultipleIntegerTilesWidth_RowsWidth_Correct() {
+    func engineLayoutCheck(withBoardWidth boardWidth: Double, roomWidth: Double?, roomHeight: Double?, latToolCutWidth: Double, expectedRowCount: Int, trashCount: Int) {
         // Use ideal tool
-        self.config.latToolCutWidth = 0.0
-        let boardWidth = 1900.0
+        self.config.latToolCutWidth = latToolCutWidth
         self.config.floorChoices[0].boardSize.width = boardWidth
+        if let roomWidth = roomWidth {
+            self.config.rooms[0].size.width = roomWidth
+        }
+        if let roomHeight = roomHeight {
+            self.config.rooms[0].size.height = roomHeight
+        }
+        
         self.setupEngineWith(self.config)
 
         let report = try! self.engine.layout()
 
-        XCTAssertEqual(report.totalRows, 20, "Unexpected number of rows")
+        XCTAssertEqual(report.totalRows, expectedRowCount, "Unexpected number of rows for BW:\(boardWidth), RW:\(roomWidth ?? -1)")
         let trash = report.trash()
-        XCTAssertEqual(trash.count, 0, "No trash expexted")
+        XCTAssertEqual(trash.count, trashCount, "No trash expexted for BW:\(boardWidth), RW:\(roomWidth ?? -1)")
 
         let summedRows = report.sumRowLengths()
         for r in summedRows {
-            XCTAssertEqual(r * boardWidth, report.engineConfig.actualRoomSize.width, "Unexpected row width")
+            XCTAssertTrue(report.engineConfig.actualRoomSize.width.nearlyEq(r * boardWidth), "Unexpected row width for BW:\(boardWidth), RW:\(roomWidth ?? -1)")
         }
 
         XCTAssertNoThrow(try report.validate())
     }
+
+    func testEngineLayout_RoomWhenWidthMultipleIntegerTilesWidth_RowsWidth_Correct() {
+        let boardWidth = 1900.0
+        // Use ideal tool
+        for k in 1 ..< 100 {
+            self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: Double(k) * boardWidth, roomHeight:nil, latToolCutWidth: 0.0, expectedRowCount: 20, trashCount: 0)
+        }
+    }
+
+    func testEngineLayout_RoomWhenWidthMultipleOneThirdTilesWidth_ForDeck_RowsWidth_Correct() {
+        let boardWidth = 1500.0
+        let rows = 3.0
+        let roomHeight = 100.0 * rows
+
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 3 * boardWidth / 3.0, roomHeight:roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 0)
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 4 * boardWidth / 3.0, roomHeight:roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 0)
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 5 * boardWidth / 3.0, roomHeight:roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 3)
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 6 * boardWidth / 3.0, roomHeight:roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 0)
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 7 * boardWidth / 3.0, roomHeight:roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 0)
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 8 * boardWidth / 3.0, roomHeight:roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 3)
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 9 * boardWidth / 3.0, roomHeight:roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 0)
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 10 * boardWidth / 3.0, roomHeight:roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 0)
+        self.engineLayoutCheck(withBoardWidth: boardWidth, roomWidth: 11 * boardWidth / 3.0, roomHeight:roomHeight, latToolCutWidth: 0.0, expectedRowCount: Int(rows), trashCount: 3)
+    }
+
+    func testEngineLayout_RoomWhenWidthMultipleOneHalfTilesWidth_ForDeck_RowsWidth_Correct() {}
 
 //    static var allTests = [
 //        ("", testUnityDoorIsValid),

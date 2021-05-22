@@ -15,6 +15,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/jpsim/Yams.git", .upToNextMajor(from: "4.0.4")),
         .package(name: "swift-argument-parser", url: "https://github.com/apple/swift-argument-parser.git", .upToNextMinor(from: "0.4.1")),
+        .package(url: "https://github.com/apple/swift-collections", from: "0.0.2"),
     ],
     targets: [
         .target(
