@@ -158,7 +158,7 @@ public class RowLayoutEngine {
             self.report.add(instruction: "Start row #\(rowIndex + 1):")
             var rowCovered = 0.0
 
-            // If there doors on the left we shift layout on the anmout of max protrusion and cut the rests
+            // If there doors on the left we shift layout on the anmout of max protrusion and cut the rests on the rows without doors
             // leftCutAmount: Amount of left protrusion that needs to be cut
             var leftCutAmount = 0.0
             if maximumLeftProtrusion > 0.0 {
@@ -463,7 +463,7 @@ public class RowLayoutEngine {
     /// Cover top and bottom when boards are from rest or new one
     /// - Parameter edge: Top or Bottom
     private func coverDoorPassage(atEdge edge: Edge) {
-        precondition(edge.isHorizontal(), "Edge must top or bottom")
+        precondition(edge.isHorizontal, "Edge must top or bottom")
         while let door = self.doorWidthMaxWidth(forEdge: edge), !door.frame.size.width.isZero {
             let doorWidth = Double(door.frame.size.width)
 
@@ -533,7 +533,7 @@ public class RowLayoutEngine {
     ///   - edge: top or bottom
     ///   - rest: normalized rest height
     private func coverDoorsAlong(edge: Edge, usingNormalizedHeightRest rest: Double) {
-        precondition(edge.isHorizontal(), "Edge must top or bottom")
+        precondition(edge.isHorizontal, "Edge must top or bottom")
         precondition(rest >= 0.0 && rest < 1.0, "Rest is not normalized: \(rest)")
 
         if let e = self.doors[edge], let last = e.last {
@@ -558,7 +558,7 @@ public class RowLayoutEngine {
     ///   - rest: rest width
     /// - Returns: If door was covered
     private func coverDoorsAlong(edge: Edge, usingNormalizedWidthRest rest: Double) -> Bool {
-        precondition(edge.isHorizontal(), "Edge must top or bottom")
+        precondition(edge.isHorizontal, "Edge must top or bottom")
         precondition(rest >= 0.0 && rest < 1.0, "Rest is not normalized: \(rest)")
 
         if let e = self.doors[edge], let last = e.last {

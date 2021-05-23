@@ -9,8 +9,9 @@ struct LayoutEngineConfig {
     let roomName: String
     let floorName: String
     let floorType: String
+    /// This size real room size, mm
     let actualRoomSize: Size
-    /// This size is actualRoomSize - side clearance
+    /// This size is actualRoomSize - side clearance, mm
     let effectiveRoomSize: Size
     /// Positive values means that rectangle to which insets are applied is reduced by them
     let insets: Insets
@@ -86,10 +87,10 @@ struct LayoutEngineConfig {
 
                 // NOTE: For doors along horizontal edges we normalize displacement and width to board width, height to board height
                 // NOTE: For doors along vertical edges we normalize displacement and width to board height, height to board width
-                let widthNorm = (d.edge.isHorizontal()) ? 1.0 / self.material.board.size.width : 1.0 / self.material.board.size.height
-                let heightNorm = (d.edge.isHorizontal()) ? 1.0 / self.material.board.size.height : 1.0 / self.material.board.size.width
-                let widthInsetCompensation = (d.edge.isHorizontal()) ? sideInset : topInset
-                let heightInsetCompensation = (d.edge.isHorizontal()) ? topInset : sideInset
+                let widthNorm = (d.edge.isHorizontal) ? 1.0 / self.material.board.size.width : 1.0 / self.material.board.size.height
+                let heightNorm = (d.edge.isHorizontal) ? 1.0 / self.material.board.size.height : 1.0 / self.material.board.size.width
+                let widthInsetCompensation = (d.edge.isHorizontal) ? sideInset : topInset
+                let heightInsetCompensation = (d.edge.isHorizontal) ? topInset : sideInset
 
                 // NOTE: We need to account clearance as door rectangle is measured from the actual wall
                 let height = (d.size.height + heightInsetCompensation)

@@ -8,7 +8,7 @@ struct Door {
     let edge: Edge
     /// door frame. y coord always 0 as door protrudes covering floor rectangle
     let frame: CGRect
-    /// if frame values are normalized wrt board dimentions
+    /// Flag shows if frame values are normalized wrt board dimentions
     /// width (longest dimension) normalized to board width for top and bottom doors
     /// height (shortest dimension) normalized to board height for top and bottom doors
     /// and for left and right it's wice versa
@@ -39,9 +39,9 @@ struct Door {
     }
 
     /// Normalize height coef used to get normalized value (devide by it to get real)
-    private let hNorm: Double
+    private(set) var hNorm: Double
     /// Normalize width coef used to get normalized value (devide by it to get real)
-    private let wNorm: Double
+    private(set) var wNorm: Double
 }
 
 extension Door: CustomDebugStringConvertible {

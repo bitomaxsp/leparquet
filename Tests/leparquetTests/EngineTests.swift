@@ -92,7 +92,7 @@ final class EngineTests: XCTestCase {
         let report = try! self.engine.layout()
 
         XCTAssertEqual(report.totalRows, expectedRowCount, "Unexpected number of rows for BW:\(boardWidth), RW:\(roomWidth ?? -1)")
-        let trash = report.trash()
+        let trash = report.trashCuts
         XCTAssertEqual(trash.count, trashCount, "No trash expexted for BW:\(boardWidth), RW:\(roomWidth ?? -1)")
 
         let summedRows = report.sumRowLengths()

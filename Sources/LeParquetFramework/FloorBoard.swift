@@ -50,7 +50,7 @@ final class LeftCut: ReusableBoard {
 
     override func cutAlongWidth(atDistance: Double, from fromEdge: Edge, cutWidth: Double) -> (LeftCut, RightCut) {
         // Left is good
-        // Right is trash
+        // Right is trash (has no original edges on sides)
 
         let diff = self.width - atDistance
         // Tool can remove amount of material and is less then tool cut width hense min()
@@ -80,7 +80,7 @@ final class RightCut: ReusableBoard {
     }
 
     override func cutAlongWidth(atDistance: Double, from fromEdge: Edge, cutWidth: Double) -> (LeftCut, RightCut) {
-        // Left is trash
+        // Left is trash (has no original edges on sides)
         // Right is good
 
         let diff = self.width - atDistance
