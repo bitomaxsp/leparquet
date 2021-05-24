@@ -8,7 +8,7 @@
 import Foundation
 
 /// Amount of margin for the drawing in points
-private let MarginPoints = 300
+// private let MarginPoints = 300
 
 enum ImageErrors: Error {
     case contextCreationFailed(String)
@@ -29,19 +29,24 @@ class LayoutRenderer {
     private let imageW: Int
     /// Image height in points
     private let imageH: Int
-    /// Object scale in px/mm
-    private let scale: CGFloat
+    /// Horizontal scale in px/mm
+    private let hScale: CGFloat
+    /// Vertical scale in px/mm
+    private let vScale: CGFloat
     private let borderColor = CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 1)
 
     init(_ file: URL, _ report: RawReport) {
         self.report = report
         self.filePath = file.appendingPathExtension("png")
         self.roomWHRatio = report.engineConfig.effectiveRoomSize.width / report.engineConfig.effectiveRoomSize.height
-        self.topMarginPoints = MarginPoints
-        self.sideMarginPoints = Int(self.topMarginPoints.doubleValue * self.roomWHRatio)
         self.imageW = 5000 // TODO: what to do for big scale?
         self.imageH = Int(self.imageW.doubleValue / self.roomWHRatio)
-        self.scale = ((self.imageW - self.sideMarginPoints * 2).doubleValue / report.engineConfig.effectiveRoomSize.width).floatValue
+
+        self.topMarginPoints = 10 * self.imageH / 100 // MarginPoints
+        self.sideMarginPoints = 5 * self.imageW / 100 // MarginPoints
+
+        self.hScale = ((self.imageW - self.sideMarginPoints * 2).doubleValue / report.engineConfig.effectiveRoomSize.width).floatValue
+        self.vScale = ((self.imageH - self.topMarginPoints * 2).doubleValue / report.engineConfig.effectiveRoomSize.height).floatValue
     }
 
     func Render() throws {
@@ -129,7 +134,7 @@ class LayoutRenderer {
 
             var tileIndex = 0
             let rects = r.map { (b) -> CGRect in
-                let w = (b.width * self.report.engineConfig.material.board.size.width).floatValue * self.scale
+                let w = (b.width * self.report.engineConfig.material.board.size.width).floatValue * self.hScale
                 if i == 0 {
                     hStep = self.report.firstRowHeight.floatValue
                 } else if i == self.report.rows.count - 1 {
@@ -137,13 +142,13 @@ class LayoutRenderer {
                 } else {
                     hStep = b.height.floatValue
                 }
-                hStep *= self.scale
+                hStep *= self.vScale
 
                 if let e = self.report.expansions[.left] {
                     if e[i] > 0 {
                         if (tileIndex == 0) {
                             // We only need to shift first board
-                            x -= ((e[i] * self.report.engineConfig.material.board.size.width) * self.scale.native).floatValue
+                            x -= ((e[i] * self.report.engineConfig.material.board.size.width) * self.hScale.native).floatValue
                         }
                     }
                 }
@@ -186,10 +191,10 @@ class LayoutRenderer {
 
         for d in self.report.doors {
             if (d.edge.isHorizontal) {
-                let x = d.frame.origin.x / (d.nomalized ? d.wNorm.floatValue : 1.0)
-                let y = d.edge == .top ? 0.0.floatValue : self.report.engineConfig.effectiveRoomSize.height.floatValue * self.scale
-                let w = d.frame.size.width / (d.nomalized ? d.wNorm.floatValue : 1.0)
-                let h = d.frame.size.height / (d.nomalized ? d.hNorm.floatValue : 1.0) * (d.edge == .top ? -1.0 : 1.0)
+                let x = d.frame.origin.x / (d.nomalized ? d.wNorm.floatValue : 1.0) * self.hScale
+                let y = d.edge == .top ? 0.0.floatValue : self.report.engineConfig.effectiveRoomSize.height.floatValue * self.vScale
+                let w = d.frame.size.width / (d.nomalized ? d.wNorm.floatValue : 1.0) * self.hScale
+                let h = d.frame.size.height / (d.nomalized ? d.hNorm.floatValue : 1.0) * (d.edge == .top ? -1.0 : 1.0) * self.vScale
                 ctx.fill(CGRect(x: x, y: y, width: w, height: h))
                 ctx.addRect(CGRect(x: x, y: y, width: w, height: h))
                 ctx.strokePath()

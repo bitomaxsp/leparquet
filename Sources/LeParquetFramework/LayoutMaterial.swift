@@ -45,7 +45,7 @@ struct LayoutMaterial {
     let notes: String?
 
     /// Amount of normalized distance between joints of adjacent rows
-    var adjacentRowsShift: Double {
+    var adjacentNormalizedRowsShift: Double {
         switch self.layout.joints {
         case .brick: return 1.0 / 2.0
         case .deck: return 1.0 / 3.0
@@ -67,7 +67,7 @@ struct LayoutMaterial {
 
     private func startWidthDeck(forRowIndex index: Int) -> Double {
         let startLength = self.layout.firstBoard.lengthAsDouble()
-        var next = startLength + self.adjacentRowsShift * Double(index % 3)
+        var next = startLength + self.adjacentNormalizedRowsShift * Double(index % 3)
         while next > NormalizedWholeStep {
             next -= NormalizedWholeStep
         }
@@ -76,15 +76,23 @@ struct LayoutMaterial {
 
     private func startWidthBrick(forRowIndex index: Int) -> Double {
         let startLength = self.layout.firstBoard.lengthAsDouble()
-        var next = startLength + self.adjacentRowsShift * Double(index % 2)
+        var next = startLength + self.adjacentNormalizedRowsShift * Double(index % 2)
         while next > NormalizedWholeStep {
             next -= NormalizedWholeStep
         }
         return next
     }
 
-    private func startWidthFreeJoints(forRowIndex index: Int) -> Double { 0.0 }
-    private func startWidthFixedJoints(forRowIndex index: Int) -> Double { 0.0 }
+    private func startWidthFreeJoints(forRowIndex index: Int) -> Double {
+        precondition(false, "This is not supposed to be used. It is special case")
+        return 0.0
+    }
+
+    private func startWidthFixedJoints(forRowIndex index: Int) -> Double {
+        precondition(false, "This is not implemented")
+        return 0.0
+    }
+
     private func startWidthOnTiles(forRowIndex index: Int) -> Double { NormalizedWholeStep }
 }
 

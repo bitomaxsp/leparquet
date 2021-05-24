@@ -5,8 +5,8 @@ let DiffCompareEpsilon = 1e-7 // seems good enough
 
 public class RowLayoutEngine {
     private typealias Stash = RawReport.BoardStash
-    private typealias StashOfLefts = [LeftCut]
-    private typealias StashOfRights = [RightCut]
+    private typealias StashOfLeftCuts = [LeftCut]
+    private typealias StashOfRightCuts = [RightCut]
 
     // ###################################
 
@@ -14,8 +14,8 @@ public class RowLayoutEngine {
     private let report: RawReport
     private let debug: Bool
     // NOTE: Reusable right cut can only be used on left side, and vise versa
-    private var reusableLeft = StashOfRights()
-    private var reusableRight = StashOfLefts()
+    private var reusableLeftSidePieces = StashOfRightCuts()
+    private var reusableRightSidePieces = StashOfLeftCuts()
     private var doors = [Edge: [Door]]()
 
     init(withConfig input: LayoutEngineConfig, debug: Bool) {
@@ -35,11 +35,11 @@ public class RowLayoutEngine {
 
         self.coverHorizontalDoorsUsingRests()
 
-        self.report.collectRests(from: self.reusableRight)
-        self.report.collectRests(from: self.reusableLeft)
+        self.report.collectRests(from: self.reusableRightSidePieces)
+        self.report.collectRests(from: self.reusableLeftSidePieces)
 
-        self.reusableLeft.removeAll()
-        self.reusableRight.removeAll()
+        self.reusableLeftSidePieces.removeAll()
+        self.reusableRightSidePieces.removeAll()
 
         if self.debug {
             print(self.report.output())
@@ -248,12 +248,67 @@ public class RowLayoutEngine {
                 self.report.add(board: board!)
             }
             // Update step before new row
-            cutLength = self.engineConfig.material.startBoardWidth(forRowAtIndex: rowIndex + 1)
+            cutLength = self.startBoard(forRowAtIndex: rowIndex + 1)
         } // end for rowIndex
 
         if self.debug {
             print("-------------------------------- DONE")
         }
+    }
+
+    // TODO: Move this to RawReport
+    private func startBoard(forRowAtIndex index: Int) -> Double {
+        // Special case of free layout
+        if self.engineConfig.material.layout.joints == .freeJoints {
+            return self.freeJointsStartBoard(forRowAtIndex: index)
+        }
+
+        return self.engineConfig.material.startBoardWidth(forRowAtIndex: index)
+    }
+
+    private func freeJointsStartBoard(forRowAtIndex index: Int) -> Double {
+        precondition(self.engineConfig.material.layout.joints == .freeJoints)
+
+        let tolerance = 1.15 // 15%
+        let minWidth = self.engineConfig.material.adjacentNormalizedRowsShift
+        let firstPrevBoard = self.report.rows[index - 1][0]
+        var jointDiff = abs(firstPrevBoard.width - NormalizedWholeStep)
+
+        // Get last cut from prev row
+        if let lastCut = self.reusableLeftSidePieces.last {
+            jointDiff = abs(firstPrevBoard.width - lastCut.width)
+            // Best case
+            if lastCut.width >= minWidth {
+                if jointDiff >= tolerance * minWidth {
+                    return lastCut.width
+                } else {
+                    // This is hueristic gives average result on borad length quasi-multiple room length
+                    if lastCut.width / 2 > tolerance * minWidth {
+                        return lastCut.width / 2
+                    } else {
+                        return lastCut.width * 3
+                    }
+                }
+            }
+
+            // Second best case, use whole board if last cut less than required.
+            if lastCut.width < minWidth {
+                // Check whole board satisfy joint distance
+                if (NormalizedWholeStep - firstPrevBoard.width) > minWidth {
+                    return NormalizedWholeStep
+                } else {
+                    // Make shorted one if not
+                    return NormalizedWholeStep - minWidth
+                }
+            }
+
+            // TODO: check that joints are min minWidth apart with prev row
+        }
+
+        if jointDiff < tolerance * minWidth {
+            return NormalizedWholeStep / 3
+        }
+        return NormalizedWholeStep
     }
 
     // return used cut
@@ -273,7 +328,7 @@ public class RowLayoutEngine {
             self.report.append(instruction: "Put LEFT cut in the row. Mark RIGHT cut as \(right.mark).")
 
             // Collect usable only if it grater than smallest cutLength for the last which 1/3 for the deck layout
-            if right.width >= self.engineConfig.material.adjacentRowsShift {
+            if right.width >= self.engineConfig.material.adjacentNormalizedRowsShift {
                 if self.debug {
                     print("Save reusable \(right) for the left side: \(right.width.round(4))")
                 }
@@ -324,22 +379,22 @@ public class RowLayoutEngine {
 
     private func stash(right: RightCut) {
         self.report.append(instruction: "Put the cut \(right.mark) to the left stash.")
-        self.reusableLeft.append(right)
+        self.reusableLeftSidePieces.append(right)
     }
 
     private func stash(left: LeftCut) {
         self.report.append(instruction: "Put the cut \(left.mark) to the right stash.")
-        self.reusableRight.append(left)
+        self.reusableRightSidePieces.append(left)
     }
 
     // Get cut (of right part) from left stash for left side
     private func useBoardFromLeftStash(withLength cutLength: Double) -> RightCut? {
-        return self.useFrom(&self.reusableLeft, cutLength)
+        return self.useFrom(&self.reusableLeftSidePieces, cutLength)
     }
 
     // Get cut (of left) from right stash for right side
     private func useBoardFromRightStash(_ cutLength: Double) -> LeftCut? {
-        return self.useFrom(&self.reusableRight, cutLength)
+        return self.useFrom(&self.reusableRightSidePieces, cutLength)
     }
 
     private func useFrom<T>(_ stash: inout [T], _ cutLength: Double) -> T? where T: ReusableBoard {
@@ -446,8 +501,8 @@ public class RowLayoutEngine {
             print("Trying to cover top and bottom door passages")
         }
         // Sort: DESC
-        self.reusableRight.sort(by: >)
-        self.reusableLeft.sort(by: >)
+        self.reusableRightSidePieces.sort(by: >)
+        self.reusableLeftSidePieces.sort(by: >)
 
         self.coverDoorPassage(atEdge: .top)
         self.coverDoorPassage(atEdge: .bottom)
@@ -484,19 +539,19 @@ public class RowLayoutEngine {
     ///   - edge: Which esdge
     /// - Returns: Found board
     private func findBoardCutForDoor(withNormalizedWidth width: Double, edge: Edge) -> ReusableBoard {
-        if let cut = self.reusableRight.first {
+        if let cut = self.reusableRightSidePieces.first {
             if cut.width >= width {
                 print("Found cut: \(cut), for \(edge) edge")
                 self.report.add(instruction: "To cover door [???], take the cut marked as \(cut.mark) from right stash.")
-                return self.reusableRight.removeFirst()
+                return self.reusableRightSidePieces.removeFirst()
             }
         }
 
-        if let cut = self.reusableLeft.first {
+        if let cut = self.reusableLeftSidePieces.first {
             if cut.width >= width {
                 print("Found cut: \(cut), for \(edge) edge")
                 self.report.add(instruction: "To cover door [???], take the cut marked as \(cut.mark) from left stash.")
-                return self.reusableLeft.removeFirst()
+                return self.reusableLeftSidePieces.removeFirst()
             }
         }
 
