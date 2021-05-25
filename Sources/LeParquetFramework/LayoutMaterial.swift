@@ -50,7 +50,6 @@ struct LayoutMaterial {
         case .brick: return 1.0 / 2.0
         case .deck: return 1.0 / 3.0
         case .freeJoints: return Self.MinFreeJointsBoardWidth / self.board.size.width // rest from prev row, if > 300mm .
-        case .fixedJoints: return self.board.size.height / self.board.size.width // fixed, set by user
         case .tiles: return 0.0
         }
     }
@@ -60,7 +59,6 @@ struct LayoutMaterial {
         case .brick: return self.startWidthBrick(forRowIndex: index)
         case .deck: return self.startWidthDeck(forRowIndex: index)
         case .freeJoints: return self.startWidthFreeJoints(forRowIndex: index)
-        case .fixedJoints: return self.startWidthFixedJoints(forRowIndex: index)
         case .tiles: return self.startWidthOnTiles(forRowIndex: index)
         }
     }
@@ -85,11 +83,6 @@ struct LayoutMaterial {
 
     private func startWidthFreeJoints(forRowIndex index: Int) -> Double {
         precondition(false, "This is not supposed to be used. It is special case")
-        return 0.0
-    }
-
-    private func startWidthFixedJoints(forRowIndex index: Int) -> Double {
-        precondition(false, "This is not implemented")
         return 0.0
     }
 

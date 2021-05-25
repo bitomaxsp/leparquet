@@ -50,7 +50,6 @@ public struct Config: Codable {
         case brick
         case deck
         case freeJoints = "free joints"
-        case fixedJoints = "fixed joints"
         case tiles
 
         func validFirst() -> [FirstBoard] {
