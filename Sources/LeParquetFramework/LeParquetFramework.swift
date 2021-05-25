@@ -1,7 +1,7 @@
 import Foundation
 
 // TODO: rename
-public final class LayoutProducer {
+public final class LeParquetFramework {
     let config: Config
     let debug: Bool
 

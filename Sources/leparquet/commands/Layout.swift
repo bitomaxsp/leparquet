@@ -26,7 +26,7 @@ extension LeParquet {
             let config = try decoder.decode(Config.self, from: data)
             try config.validate()
 
-            let layout = LayoutProducer(config: config, verbose: self.verbose == nil ? nil : true)
+            let layout = LeParquetFramework(config: config, verbose: self.verbose == nil ? nil : true)
             let report = try layout.calculate()
             report.generateFiles()
             report.generateGraphics()
