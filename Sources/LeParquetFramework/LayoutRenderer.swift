@@ -1,10 +1,5 @@
-//
-//  File.swift
-//
-//
-//  Created by Dmitry on 2021-05-23.
-//
-
+import CoreGraphics
+import CoreText
 import Foundation
 
 /// Amount of margin for the drawing in points
@@ -94,7 +89,7 @@ class LayoutRenderer {
 
     private func setup(context ctx: CGContext) {
         ctx.setAllowsAntialiasing(true)
-        ctx.setBlendMode(.normal)
+        ctx.setBlendMode(.darken)
     }
 
     private func draw(inContext ctx: CGContext) {
@@ -134,7 +129,8 @@ class LayoutRenderer {
 
             var tileIndex = 0
             let rects = r.map { (b) -> CGRect in
-                let w = (b.width * self.report.engineConfig.material.board.size.width).floatValue * self.hScale
+                let wMM = b.width * self.report.engineConfig.material.board.size.width
+                let w = (wMM).floatValue * self.hScale
                 if i == 0 {
                     hStep = self.report.firstRowHeight.floatValue
                 } else if i == self.report.rows.count - 1 {
@@ -154,6 +150,9 @@ class LayoutRenderer {
                 }
 
                 let r = CGRect(x: x, y: y, width: w, height: hStep)
+
+                self.drawLabel(inContext: ctx, str: "\(wMM.round(1, "f"))", rect: r)
+
                 x += w
                 tileIndex += 1
                 return r
@@ -166,11 +165,39 @@ class LayoutRenderer {
             ctx.addRects(rects) // added here on previous iteration
             ctx.strokePath() // so we need to stroke them
         }
-
-        // TODO: draw top/bottom room rect
-        // TODO: draw doors in dark gray
     }
 
+    private func drawLabel(inContext ctx: CGContext, str: String, rect: CGRect) {
+        ctx.saveGState()
+        defer {
+            ctx.restoreGState()
+        }
+
+        ctx.setTextDrawingMode(.fill)
+
+        ctx.textMatrix = CGAffineTransform.identity
+        // Translate Y axis
+        ctx.textMatrix.d *= -1
+
+        let string = str as CFString
+        // Font size if half Rect heigh
+        let font = CTFontCreateWithName("System" as CFString, rect.height / 2, nil)
+
+        let attributes = [kCTFontAttributeName: font] as [CFString: Any]
+        let attrString = CFAttributedStringCreate(kCFAllocatorDefault, string, attributes as CFDictionary)
+        let line = CTLineCreateWithAttributedString(attrString!)
+
+        let bounds = CTLineGetImageBounds(line, ctx)
+        // + because of coordinate frame of text is bottom/left after translating
+        let y = rect.midY + bounds.height * 0.5
+        let x = rect.midX - bounds.width * 0.5
+
+        ctx.textPosition = CGPoint(x: x, y: y)
+        CTLineDraw(line, ctx)
+    }
+
+    // TODO: draw top/bottom room rect
+    // TODO: draw doors in dark gray
     private func drawHorizontalDoors(inContext ctx: CGContext) {
         // Invert and move up Y axis so the we have simple height calculations
         // Zero is at top left corner, Y points down
