@@ -624,7 +624,7 @@ public class RowLayoutEngine {
                 self.report.add(door: self.doors[edge]!.removeLast())
                 return true
             } else {
-                // Larges door can't be covered, so we for simplicity fallback to cover from whole boards
+                // Large doors can't be covered, so we for simplicity fallback to cover from whole boards
                 print("ERROR: Couldn't cover door (\(last) using \(rest) rest. This is probably a bug.")
             }
         }
