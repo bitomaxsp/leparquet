@@ -38,6 +38,10 @@ extension Double {
             return diff / min((absA + absB), Double.greatestFiniteMagnitude) < epsilon
         }
     }
+
+    var floatValue: CGFloat {
+        CGFloat(self)
+    }
 }
 
 func > (_ lhs: CGFloat, _ rhs: Double) -> Bool {
@@ -70,4 +74,14 @@ func > (_ lhs: Double, _ rhs: CGFloat) -> Bool {
 
 func >= (_ lhs: Double, _ rhs: CGFloat) -> Bool {
     return lhs >= Double(rhs)
+}
+
+extension Int {
+    var doubleValue: Double {
+        return Double(self)
+    }
+
+    var floatValue: CGFloat {
+        CGFloat(self)
+    }
 }

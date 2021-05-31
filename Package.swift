@@ -14,12 +14,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/jpsim/Yams.git", .upToNextMajor(from: "4.0.4")),
-        .package(name: "swift-argument-parser", url: "https://github.com/apple/swift-argument-parser.git", .upToNextMinor(from: "0.3.2")),
-//        .package(url: "https://github.com/jpsim/SourceKitten.git", .upToNextMinor(from: "0.31.0")),
-//        .package(url: "https://github.com/jpsim/Yams.git", from: "4.0.2"),
-//
-        // Dependencies declare other packages that this package depends on.
-        // .package(url: /* package url */, from: "1.0.0"),
+        .package(name: "swift-argument-parser", url: "https://github.com/apple/swift-argument-parser.git", .upToNextMinor(from: "0.4.1")),
+        .package(url: "https://github.com/apple/swift-collections", from: "0.0.2"),
     ],
     targets: [
         .target(
@@ -37,7 +33,10 @@ let package = Package(
         ),
         .testTarget(
             name: "leparquetTests",
-            dependencies: ["LeParquetFramework"]
+            dependencies: ["LeParquetFramework"],
+            resources: [
+                .copy("config.yaml"),
+            ]
         ),
     ]
 )

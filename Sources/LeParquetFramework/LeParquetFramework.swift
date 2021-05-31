@@ -1,6 +1,7 @@
 import Foundation
 
-public final class LayoutProducer {
+// TODO: rename
+public final class LeParquetFramework {
     let config: Config
     let debug: Bool
 
@@ -31,7 +32,7 @@ public final class LayoutProducer {
     private func calculateRoom(for floor: Config.Floor, to report: Report) throws {
         for room in self.config.rooms {
             let input = try LayoutEngineConfig(self.config, floor, room)
-            let engine = RowLayoutEngine(input, debug: self.debug)
+            let engine = RowLayoutEngine(withConfig: input, debug: self.debug)
             let rawReport = try engine.layout()
             report.add(rawReport)
         }
