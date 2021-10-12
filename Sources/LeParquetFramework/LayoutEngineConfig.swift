@@ -12,7 +12,7 @@ struct LayoutEngineConfig {
     /// This size real room size, mm
     let actualRoomSize: Size
     /// This size is actualRoomSize - side clearance, mm
-    let effectiveRoomSize: Size
+    let effectiveCoverSize: Size
     /// Positive values means that rectangle to which insets are applied is reduced by them
     let insets: Insets
 
@@ -26,11 +26,13 @@ struct LayoutEngineConfig {
     var doors: [Edge: [Door]]?
     /*
      NOTE: Maximum amount of protrussion to the left.
-     This is the amount by which we shift whole floor left so that door passages on the left are covered.
+     This is the amount by which we shift/extend whole floor to the left so that door passages on the left side are covered.
      Boards that doesn't protrude are cut left by the amount of protrusion.
      This protrusion includes side clearance
      */
     let maxNormalizedLeftProtrusion: Double
+    // Positive left, negative right
+    let normalizedHorizontalShift: Double
 
     // DO NO USE IN COMPUTATIONS
     let calc_covered_area: Double
@@ -46,7 +48,7 @@ struct LayoutEngineConfig {
         let sideInset = room.widthClearance ?? config.widthClearance
         self.insets = Insets(top: topInset, left: sideInset, bottom: topInset, right: sideInset)
 
-        self.effectiveRoomSize = Size(width: self.actualRoomSize.width - 2.0 * sideInset, height: self.actualRoomSize.height - 2.0 * topInset)
+        self.effectiveCoverSize = Size(width: self.actualRoomSize.width - 2.0 * sideInset, height: self.actualRoomSize.height - 2.0 * topInset)
 
         self.minLastRowHeight = room.minLastRowHeight ?? config.minLastRowHeight
         self.desiredLastRowHeight = { (_ minLast: Double) -> Double in
@@ -114,6 +116,9 @@ struct LayoutEngineConfig {
         }
 
         self.maxNormalizedLeftProtrusion = maxLeft
+        // TODO: account for clearance
+        self.normalizedHorizontalShift = -config.horLayoutShift / self.material.board.size.width
+
         try self.validate(config, floor, room)
     }
 

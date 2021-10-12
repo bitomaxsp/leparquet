@@ -50,7 +50,7 @@ final class ConfigTests: XCTestCase {
         let sideInset = room.widthClearance ?? config.widthClearance
 
         let effectiveSize = Config.Size(width: room.size.width - 2 * sideInset, height: room.size.height - 2 * topInset)
-        XCTAssertEqual(engineconfig.effectiveRoomSize, effectiveSize, "Effective size mismatch")
+        XCTAssertEqual(engineconfig.effectiveCoverSize, effectiveSize, "Effective size mismatch")
 
         XCTAssertEqual(engineconfig.insets, Insets(top: topInset, left: sideInset, bottom: topInset, right: sideInset), "Insets mismatch")
 

@@ -1,4 +1,5 @@
 import CoreGraphics
+import ImageIO
 import CoreText
 import Foundation
 
@@ -33,15 +34,15 @@ class LayoutRenderer {
     init(_ file: URL, _ report: RawReport) {
         self.report = report
         self.filePath = file.appendingPathExtension("png")
-        self.roomWHRatio = report.engineConfig.effectiveRoomSize.width / report.engineConfig.effectiveRoomSize.height
+        self.roomWHRatio = report.engineConfig.effectiveCoverSize.width / report.engineConfig.effectiveCoverSize.height
         self.imageW = 5000 // TODO: what to do for big scale?
         self.imageH = Int(self.imageW.doubleValue / self.roomWHRatio)
 
         self.topMarginPoints = 10 * self.imageH / 100 // MarginPoints
         self.sideMarginPoints = 5 * self.imageW / 100 // MarginPoints
 
-        self.hScale = ((self.imageW - self.sideMarginPoints * 2).doubleValue / report.engineConfig.effectiveRoomSize.width).floatValue
-        self.vScale = ((self.imageH - self.topMarginPoints * 2).doubleValue / report.engineConfig.effectiveRoomSize.height).floatValue
+        self.hScale = ((self.imageW - self.sideMarginPoints * 2).doubleValue / report.engineConfig.effectiveCoverSize.width).floatValue
+        self.vScale = ((self.imageH - self.topMarginPoints * 2).doubleValue / report.engineConfig.effectiveCoverSize.height).floatValue
     }
 
     func Render() throws {
@@ -180,9 +181,15 @@ class LayoutRenderer {
         ctx.textMatrix.d *= -1
 
         let string = str as CFString
+        
+        var fontKern = 114.0
+        if fontKern > rect.height / 2  {
+            fontKern = rect.height / 2
+        }
+    
         // Font size if half Rect heigh
-        let font = CTFontCreateWithName("System" as CFString, rect.height / 2, nil)
-
+        let font = CTFontCreateWithName("System" as CFString, fontKern, nil)
+        
         let attributes = [kCTFontAttributeName: font] as [CFString: Any]
         let attrString = CFAttributedStringCreate(kCFAllocatorDefault, string, attributes as CFDictionary)
         let line = CTLineCreateWithAttributedString(attrString!)
@@ -219,7 +226,7 @@ class LayoutRenderer {
         for d in self.report.doors {
             if (d.edge.isHorizontal) {
                 let x = d.frame.origin.x / (d.nomalized ? d.wNorm.floatValue : 1.0) * self.hScale
-                let y = d.edge == .top ? 0.0.floatValue : self.report.engineConfig.effectiveRoomSize.height.floatValue * self.vScale
+                let y = d.edge == .top ? 0.0.floatValue : self.report.engineConfig.effectiveCoverSize.height.floatValue * self.vScale
                 let w = d.frame.size.width / (d.nomalized ? d.wNorm.floatValue : 1.0) * self.hScale
                 let h = d.frame.size.height / (d.nomalized ? d.hNorm.floatValue : 1.0) * (d.edge == .top ? -1.0 : 1.0) * self.vScale
                 ctx.fill(CGRect(x: x, y: y, width: w, height: h))

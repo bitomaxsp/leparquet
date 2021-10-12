@@ -15,7 +15,7 @@ class RawReport {
     var boardWidth: Double { return self.engineConfig.material.board.size.width }
     var boardHeight: Double { return self.engineConfig.material.board.size.height }
     var boardArea: Measurement<UnitArea> { return self.engineConfig.material.board.area }
-    var roomSize: Config.Size { return self.engineConfig.effectiveRoomSize }
+    var roomSize: Config.Size { return self.engineConfig.effectiveCoverSize }
 
     /// Rows with actual boards, width is normalized, height is real
     private(set) var rows = [BoardStash]()

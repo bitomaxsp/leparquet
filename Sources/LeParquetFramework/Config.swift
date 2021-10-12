@@ -12,6 +12,7 @@ public struct Config: Codable {
         case floorChoices = "floor_choices"
         case latToolCutWidth = "lateral_tool_cut_width"
         case lonToolCutWidth = "longitudinal_tool_cut_width"
+        case horLayoutShift = "horizontal_layout_shift"
         case floorIndex = "floor_index"
         case layout
     }
@@ -34,6 +35,8 @@ public struct Config: Codable {
     var latToolCutWidth = 2.0
     // Tool cut width in mm
     var lonToolCutWidth = 3.0
+    // Horizintal layout shift. Positive right, Negative left.
+    var horLayoutShift = 0.0
     // Seleced floor index for particular calculation
     var floorIndex: Int?
     // Global layout for all rooms, override per room is possible.

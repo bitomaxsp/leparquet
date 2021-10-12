@@ -55,11 +55,11 @@ public class RowLayoutEngine {
 
     private func calculateRows() {
         let boardHeight = self.engineConfig.material.board.size.height
-        let normalizedRoomHeight = self.engineConfig.effectiveRoomSize.height / boardHeight
+        let normalizedRoomHeight = self.engineConfig.effectiveCoverSize.height / boardHeight
         let totalRows = ceil(normalizedRoomHeight)
         self.report.totalRows = Int(totalRows)
 
-        self.report.unusedHeightInLastRow = totalRows * boardHeight - self.engineConfig.effectiveRoomSize.height
+        self.report.unusedHeightInLastRow = totalRows * boardHeight - self.engineConfig.effectiveCoverSize.height
 
         precondition(self.report.unusedHeightInLastRow <= boardHeight, "Ununsed last board height must be less than 1 board height")
 
@@ -143,7 +143,7 @@ public class RowLayoutEngine {
          */
         let maximumLeftProtrusion = self.engineConfig.maxNormalizedLeftProtrusion
         // 1 - Normalized to one board width/length
-        let normalizedRoomWidth = self.engineConfig.effectiveRoomSize.width / boardWidth + maximumLeftProtrusion
+        let normalizedRoomWidth = self.engineConfig.effectiveCoverSize.width / boardWidth + maximumLeftProtrusion
 
         if self.debug {
             print("Normalized row width: \(normalizedRoomWidth.round(4)), left protrusion: \(maximumLeftProtrusion)")
@@ -156,9 +156,9 @@ public class RowLayoutEngine {
 
             self.report.newRow()
             self.report.add(instruction: "Start row #\(rowIndex + 1):")
-            var rowCovered = 0.0
+            var coveredRowWidth = 0.0
 
-            // If there doors on the left we shift layout on the anmout of max protrusion and cut the rests on the rows without doors
+            // If there doors on the left we shift/extend layout on the anmout of max protrusion and cut the rests on the rows without doors
             // leftCutAmount: Amount of left protrusion that needs to be cut
             var leftCutAmount = 0.0
             if maximumLeftProtrusion > 0.0 {
@@ -174,11 +174,17 @@ public class RowLayoutEngine {
                     print("leftProtrusion:\(leftProtrusion.round(4))[\((leftProtrusion * boardWidth).round(4))], leftCutAmount:\(leftCutAmount.round(4))[\(leftCutAmount * boardWidth)]")
                 }
 
-                // If there is not door we need shorted boards by the amount of max protrusion
+                // If there is no door we need to make board shorter by the amount of max protrusion
                 cutLength -= leftCutAmount
                 if self.debug {
                     print("Reduce cutLength \(cutLength.round(4)) by \(leftCutAmount.round(4))")
                 }
+            }
+
+            // Reduce first board length for shift amount
+            cutLength -= self.engineConfig.normalizedHorizontalShift
+            if (cutLength < 0.0) {
+                cutLength = NormalizedWholeStep
             }
 
             // First board used from LEFT stash
@@ -193,7 +199,7 @@ public class RowLayoutEngine {
 
             precondition(board != nil, "Board must be valid here")
             self.report.add(board: board!)
-            rowCovered += board!.width
+            coveredRowWidth += board!.width
 
             if self.debug {
                 print("Row:\(rowIndex) Step: \(cutLength.round(4))")
@@ -219,9 +225,9 @@ public class RowLayoutEngine {
             let reducedNormalizedRoomWidth = normalizedRoomWidth - leftCutAmount + rightProtrusion
 
             // We calculate cover diff to account small rounding errors
-            while (reducedNormalizedRoomWidth - rowCovered) > DiffCompareEpsilon {
+            while (reducedNormalizedRoomWidth - coveredRowWidth) > DiffCompareEpsilon {
                 board = nil
-                cutLength = min(NormalizedWholeStep, Double(reducedNormalizedRoomWidth - rowCovered))
+                cutLength = min(NormalizedWholeStep, Double(reducedNormalizedRoomWidth - coveredRowWidth))
 
                 if self.debug {
                     print("Row:\(rowIndex) Step: \(cutLength.round(4))")
@@ -244,7 +250,7 @@ public class RowLayoutEngine {
                 }
                 precondition(board != nil, "Board must be valid here")
 
-                rowCovered += cutLength
+                coveredRowWidth += cutLength
                 self.report.add(board: board!)
             }
             // Update step before new row
