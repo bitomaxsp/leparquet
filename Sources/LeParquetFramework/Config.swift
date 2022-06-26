@@ -15,6 +15,8 @@ public struct Config: Codable {
         case horLayoutShift = "horizontal_layout_shift"
         case floorIndex = "floor_index"
         case layout
+        case verticalMarks = "vert_marks"
+        case horizontalMarks = "hor_marks"
     }
 
     var showCalculations: Bool = false
@@ -41,7 +43,10 @@ public struct Config: Codable {
     var floorIndex: Int?
     // Global layout for all rooms, override per room is possible.
     var layout: Layout
-
+    
+    var verticalMarks: [Double]? // size in mm
+    var horizontalMarks: [Double]?  // size in mm
+    
     struct Size: Codable, Equatable {
         /// Length, from left to right
         var width = 0.0

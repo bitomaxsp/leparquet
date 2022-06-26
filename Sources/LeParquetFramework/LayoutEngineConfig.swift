@@ -38,6 +38,9 @@ struct LayoutEngineConfig {
     let calc_covered_area: Double
     let calc_covered_area_with_margin: Double
 
+    let verticalMarks: [Double] // size in mm
+    let horizontalMarks: [Double]  // size in mm
+
     init(_ config: Config, _ floor: Config.Floor, _ room: Config.Room) throws {
         self.roomName = room.name
         self.floorName = floor.name
@@ -70,6 +73,9 @@ struct LayoutEngineConfig {
         // DO NO USE IN COMPUTATION
         self.calc_covered_area = Double(self.actualRoomSize.width * self.actualRoomSize.height * 1e-6)
         self.calc_covered_area_with_margin = self.calc_covered_area * (1.0 + self.coverMaterialMargin)
+
+        self.verticalMarks = config.verticalMarks ?? [Double]()
+        self.horizontalMarks = config.horizontalMarks ?? [Double]()
 
         var maxLeft = 0.0
         if let doors = room.doors {

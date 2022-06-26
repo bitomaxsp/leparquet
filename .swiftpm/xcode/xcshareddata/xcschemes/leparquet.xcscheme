@@ -74,7 +74,7 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "config0.yaml"
+            argument = "config78.yaml"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
