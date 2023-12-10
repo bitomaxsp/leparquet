@@ -7,7 +7,7 @@ A: Because I couldn't find any reasonable tool that gives me sane results which 
 
 ## If you are a regular person
 
-You need to have [swift](https://docs.swift.org) installed. Then just run `swift run leparquet deck --verbose config.yaml`
+You need to have [swift](https://docs.swift.org) installed. Then just run `swift run leparquet layout --verbose config.yaml`
 
 `config.yaml` should contain you room setup
 
@@ -15,7 +15,7 @@ You need to have [swift](https://docs.swift.org) installed. Then just run `swift
 
 You know what to do. 
 
-Hint: `swiftformat . && swift run leparquet deck --verbose config.yaml`
+Hint: `swiftformat . && swift run leparquet layout --verbose config.yaml`
 
 ## Room shape consideration
 
@@ -33,7 +33,7 @@ Usually rooms are not precise rectangles. One side maybe 1-2 cm greater or less 
 
 ### Door rectangles measurements
 
-Leparquet can take door passages into account. You specify door in the config file. It is very important how to do measurements of the door passages. You need to measure 3 parameters:
+Leparquet can take door passages into account. You specify door in the config file. It is very important how to do the measurements of the door passages. You need to measure 3 parameters:
 
 1. Door passage origin point. You measure it from coordinate frame origin (top left corner) along the edge where door is. Measurement must be taken from the wall. 
 2. Width of the passage. You specify width ALONG the edge. For example, if the door is at the top room edge, you measure width from left to right. If the door is on the right or left edge, you measure width from top to bottom.
