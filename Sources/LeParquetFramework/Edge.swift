@@ -9,11 +9,11 @@ enum Edge: String, Codable, CaseIterable {
 }
 
 extension Edge {
-    func isVertical() -> Bool {
+    var isVertical: Bool {
         return self == .left || self == .right
     }
 
-    func isHorizontal() -> Bool {
+    var isHorizontal: Bool {
         return self == .top || self == .bottom
     }
 }

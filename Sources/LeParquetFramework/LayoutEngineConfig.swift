@@ -6,91 +6,66 @@ let maxClearance_mm = 30.0
 struct LayoutEngineConfig {
     typealias Size = Config.Size
 
-    struct Material {
-        init(_ floor: Config.Floor) {
-            let area = floor.boardSize.height * floor.boardSize.width
-            self.board = Material.Board(size: floor.boardSize, area: Measurement(value: area, unit: UnitArea.squareMillimeters))
-            let packArea = floor.packArea == nil ? nil : Measurement(value: floor.packArea!, unit: UnitAreaPerPack.squareMeters)
-            let bpp = floor.boardsPerPack == nil ? nil : Measurement<UnitBoardsPerPack>(value: Double(floor.boardsPerPack!), unit: .boards)
-
-            var weight: Measurement<UnitMass>?
-            if let m = floor.packWeight {
-                weight = Measurement<UnitMass>(value: m, unit: .kilograms)
-            }
-
-            self.pack = Material.Pack(area: packArea, boardsCount: bpp, pricePerM2: floor.pricePerM2, weight: weight)
-
-            self.type = floor.type
-            self.name = floor.name
-            self.notes = nil
-        }
-
-        struct Board {
-            let size: Size
-            let area: Measurement<UnitArea>
-        }
-
-        struct Pack {
-            let area: Measurement<UnitAreaPerPack>?
-            let boardsCount: Measurement<UnitBoardsPerPack>?
-            let pricePerM2: Double?
-            let weight: Measurement<UnitMass>?
-        }
-
-        let board: Board
-        let pack: Pack
-        let type: String
-        let name: String
-        let notes: String?
-    }
-
     let roomName: String
     let floorName: String
+    let floorType: String
+    /// This size real room size, mm
     let actualRoomSize: Size
-    /// This size is actualRoomSize - side clearance
-    let effectiveRoomSize: Size
-    /// Positive values mens that rectangle to which insets are applied is reduced by them
+    /// This size is actualRoomSize - side clearance, mm
+    let effectiveCoverSize: Size
+    /// Positive values means that rectangle to which insets are applied is reduced by them
     let insets: Insets
 
-    let firstBoard: Config.Room.FirstBoard
     let minLastRowHeight: Double
     let desiredLastRowHeight: Double
     let coverMaterialMargin: Double
-    let material: Material
+    let material: LayoutMaterial
     let normalizedLatToolCutWidth: Double
+    // real sizes in mm
     let lonToolCutWidth: Double
     var doors: [Edge: [Door]]?
     /*
      NOTE: Maximum amount of protrussion to the left.
-     This is the amount by which we shift whole floor left so that door passages on the left are covered.
+     This is the amount by which we shift/extend whole floor to the left so that door passages on the left side are covered.
      Boards that doesn't protrude are cut left by the amount of protrusion.
      This protrusion includes side clearance
      */
     let maxNormalizedLeftProtrusion: Double
+    // Positive left, negative right
+    let normalizedHorizontalShift: Double
 
     // DO NO USE IN COMPUTATIONS
     let calc_covered_area: Double
     let calc_covered_area_with_margin: Double
 
+    let verticalMarks: [Double] // size in mm
+    let horizontalMarks: [Double]  // size in mm
+
     init(_ config: Config, _ floor: Config.Floor, _ room: Config.Room) throws {
         self.roomName = room.name
-        self.floorName = floor.type
+        self.floorName = floor.name
+        self.floorType = floor.type
         self.actualRoomSize = room.size
-        // Fallback to 1/3 if user input is invalid
-        self.firstBoard = room.firstBoard
 
         let topInset = room.heightClearance ?? config.heightClearance
         let sideInset = room.widthClearance ?? config.widthClearance
         self.insets = Insets(top: topInset, left: sideInset, bottom: topInset, right: sideInset)
 
-        self.effectiveRoomSize = Size(width: self.actualRoomSize.width - 2.0 * sideInset, height: self.actualRoomSize.height - 2.0 * topInset)
+        self.effectiveCoverSize = Size(width: self.actualRoomSize.width - 2.0 * sideInset, height: self.actualRoomSize.height - 2.0 * topInset)
 
         self.minLastRowHeight = room.minLastRowHeight ?? config.minLastRowHeight
-        self.desiredLastRowHeight = room.desiredLastRowHeight ?? config.desiredLastRowHeight
+        self.desiredLastRowHeight = { (_ minLast: Double) -> Double in
+            var desired = room.desiredLastRowHeight ?? config.desiredLastRowHeight
+            if desired > 0.0, desired < minLast {
+                desired = minLast
+            }
+            return desired
+        }(self.minLastRowHeight)
+
         let margin = room.coverMargin ?? config.coverMargin
         precondition(margin >= 0.0 && margin <= 0.5)
         self.coverMaterialMargin = margin
-        self.material = Material(floor)
+        self.material = LayoutMaterial(floor, room.layout ?? config.layout)
 
         self.normalizedLatToolCutWidth = config.latToolCutWidth / self.material.board.size.width
         self.lonToolCutWidth = config.lonToolCutWidth
@@ -98,6 +73,9 @@ struct LayoutEngineConfig {
         // DO NO USE IN COMPUTATION
         self.calc_covered_area = Double(self.actualRoomSize.width * self.actualRoomSize.height * 1e-6)
         self.calc_covered_area_with_margin = self.calc_covered_area * (1.0 + self.coverMaterialMargin)
+
+        self.verticalMarks = config.verticalMarks ?? [Double]()
+        self.horizontalMarks = config.horizontalMarks ?? [Double]()
 
         var maxLeft = 0.0
         if let doors = room.doors {
@@ -117,10 +95,10 @@ struct LayoutEngineConfig {
 
                 // NOTE: For doors along horizontal edges we normalize displacement and width to board width, height to board height
                 // NOTE: For doors along vertical edges we normalize displacement and width to board height, height to board width
-                let widthNorm = (d.edge.isHorizontal()) ? 1.0 / self.material.board.size.width : 1.0 / self.material.board.size.height
-                let heightNorm = (d.edge.isHorizontal()) ? 1.0 / self.material.board.size.height : 1.0 / self.material.board.size.width
-                let widthInsetCompensation = (d.edge.isHorizontal()) ? sideInset : topInset
-                let heightInsetCompensation = (d.edge.isHorizontal()) ? topInset : sideInset
+                let widthNorm = (d.edge.isHorizontal) ? 1.0 / self.material.board.size.width : 1.0 / self.material.board.size.height
+                let heightNorm = (d.edge.isHorizontal) ? 1.0 / self.material.board.size.height : 1.0 / self.material.board.size.width
+                let widthInsetCompensation = (d.edge.isHorizontal) ? sideInset : topInset
+                let heightInsetCompensation = (d.edge.isHorizontal) ? topInset : sideInset
 
                 // NOTE: We need to account clearance as door rectangle is measured from the actual wall
                 let height = (d.size.height + heightInsetCompensation)
@@ -144,6 +122,9 @@ struct LayoutEngineConfig {
         }
 
         self.maxNormalizedLeftProtrusion = maxLeft
+        // TODO: account for clearance
+        self.normalizedHorizontalShift = -config.horLayoutShift / self.material.board.size.width
+
         try self.validate(config, floor, room)
     }
 

@@ -14,12 +14,15 @@ width_clearance: 10
 # Could be overriden per room
 min_last_row_height: 60.0
 # You could specify last row (the one at the bottom of the room) board height in mm.
-# Could be overriden per room
+# Could be overriden per room.
+# Set to 0, in which case min_last_row_height is used
+# Set to anything >= min_last_row_height, in which case engine will try to satisfy it
+# If > 0 and < min_last_row_height, capped to min_last_row_height.
 desired_last_row_height: 100.0
 # This is not usind in layout computation.
 # Specify how large area overhead you expect per room to compare it with reality.
 # Could be overriden per room, in %/100
-cover_margin: 0.05
+cover_margin: 0.1
 
 # Optional: use it if you want to limit calculation to only selected floor type
 # This is zero-based index of the floor in floor array
@@ -31,22 +34,32 @@ lateral_tool_cut_width: 2.0
 # Tool cut width for longitudinal cuts in mm. Max 5mm
 longitudinal_tool_cut_width: 3.0
 
+# Horizintal layout shift. Positive right, Negative left.
+# Use that if you want to shilf layout left or right.
+horizontal_layout_shift: 0.0
+
 # Type of laylout: 1/2 - brick, 1/3 - deck, free-joints, fixed-joints
 # This is global, but you can override it per room
+layout:
+  type: deck
+  first_board: full # or 1/2, 2/3, full
+  angle: 0 # Optional: Degrees. 0˚ is 3 o'clock, 90˚ is 12 o'clock, etc.
+  tile_clearance: 2 # Optional: clearance between tiles in mm
+  
 # layout:
-#   type: 1/2
-#   first_board: "1/2" # or "full"
-
-# layout:
-#   type: 1/3
+#   type: deck
 #   first_board: "1/3" # or "full"
 
 # layout:
-#   type: free-joints
+#   type: free joints
 #   first_board: "full"
 
 # layout:
-#   type: fixed-joints
+#   type: fixed joints
+#   first_board: "full"
+
+# layout:
+#   type: aligned
 #   first_board: "full"
 
 # Array of rooms you would like to calculate layout for
@@ -54,45 +67,59 @@ rooms:
   - name: "small"  # Room name to identify it later
     size:
       # Room height in mm (from top to bottom, measured between walls)
-      height: 2110
+      height: 3575
       # Room width  in mm (from left to right (layout direction), measured between walls)
-      width: 3800
+      width: 3810
 
     # Cover margin override for this room
     cover_margin: 0.1
-    # Length (width) of thefFirst board in the first row
-    # Valid value: "full", "1/3", "2/3"
-    first_board: 1/3
 
     # doors array is optional,
     # Doors must not intersect
     # Door rect is measure from the wall where it starts. See measurements section in README.md
     doors:
-      - edge: left # left, right, top, bottom
-        displacement: 170 # (0, 0) top, left
-        name: door1 # name used to identify the door
+      - edge: top # left, right, top, bottom
+        displacement: 80 # (0, 0) top, left
+        name: door top # name used to identify the door
         size:
-          height: 35 # Size in mm
+          height: 65 # Size in mm
+          width: 900 # Size in mm
+      - edge: left # left, right, top, bottom
+        displacement: 270 # (0, 0) top, left
+        name: door left # name used to identify the door
+        size:
+          height: 45 # Size in mm
+          width: 900 # Size in mm
+      - edge: right # left, right, top, bottom
+        displacement: 470 # (0, 0) top, left
+        name: door right # name used to identify the door
+        size:
+          height: 80 # Size in mm
+          width: 900 # Size in mm
+      - edge: bottom # left, right, top, bottom
+        displacement: 570 # (0, 0) top, left
+        name: door bottom # name used to identify the door
+        size:
+          height: 135 # Size in mm
           width: 900 # Size in mm
 
-
-  - name: "big"
-    size:
-      height: 3800
-      width: 14010
-
-    first_board: "1/3" # "full", "1/3", "2/3"
-
-    # This is override for this room
-    height_clearance: 200
-    # This is override for this room
-    width_clearance: 300
-    # This is override for this room
-    min_last_row_height: 100.0
-    # This is override for this room
-    desired_last_row_height: 140.0
-    # This is override for this room
-    cover_margin: 0.15
+#  - name: "big"
+#    size:
+#      height: 3800
+#      width: 14010
+#
+#    first_board: 1/3 # full, 1/3, 2/3
+#
+#    # This is override for this room
+#    height_clearance: 20
+#    # This is override for this room
+#    width_clearance: 30
+#    # This is override for this room
+#    min_last_row_height: 100.0
+#    # This is override for this room
+#    desired_last_row_height: 140.0
+#    # This is override for this room
+#    cover_margin: 0.15
 
 # Array of possible floor types used for layout
 floor_choices:
@@ -112,6 +139,9 @@ floor_choices:
     # Usually you take this from floor TDS
     # Value in items per pack
     boards_per_pack: 6
+
+    # Pack weight in kg. Used to calculate total weight. Optional.
+    pack_weight: 20
 
     # If known used to calculate BOM per room
     price_per_msq: 780

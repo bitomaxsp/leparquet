@@ -12,7 +12,7 @@ struct LeParquet: ParsableCommand {
         """,
         version: Version.value,
         subcommands: [
-            Deck.self,
+            Layout.self,
 //            GenerateConfig.self,
         ]
 //        defaultSubcommand: Version.self

@@ -4,20 +4,19 @@ class ReusableBoard: Rect {
     private var w: Double
     private var h: Double
     private let trash: Bool
-    private let mark_: String
+    let mark: String
 
     fileprivate init(width: Double, height: Double, reuse: Bool, mark: String) {
         self.w = width
         self.h = height
         self.trash = !reuse
-        self.mark_ = mark
+        self.mark = mark
     }
 
     var reusable: Bool { !self.trash }
     var width: Double { self.w }
     var height: Double { self.h }
     var area: Double { self.w * self.h }
-    var mark: String { self.mark_ }
 
     // TODO: If board has one of the corners cut out
     var cornerCutOut: Bool = false
@@ -50,7 +49,7 @@ final class LeftCut: ReusableBoard {
 
     override func cutAlongWidth(atDistance: Double, from fromEdge: Edge, cutWidth: Double) -> (LeftCut, RightCut) {
         // Left is good
-        // Right is trash
+        // Right is trash (has no original edges on sides)
 
         let diff = self.width - atDistance
         // Tool can remove amount of material and is less then tool cut width hense min()
@@ -80,7 +79,7 @@ final class RightCut: ReusableBoard {
     }
 
     override func cutAlongWidth(atDistance: Double, from fromEdge: Edge, cutWidth: Double) -> (LeftCut, RightCut) {
-        // Left is trash
+        // Left is trash (has no original edges on sides)
         // Right is good
 
         let diff = self.width - atDistance
@@ -97,10 +96,6 @@ final class RightCut: ReusableBoard {
         }
     }
 }
-
-final class TopCut: ReusableBoard {}
-
-final class BottomCut: ReusableBoard {}
 
 final class FloorBoard: ReusableBoard {
     init(width: Double, height: Double) {
@@ -125,7 +120,7 @@ final class FloorBoard: ReusableBoard {
     }
 }
 
-// We mostly intereted in boards width, so we overload for it
+// We mostly interested in boards width, so we overload for it
 extension ReusableBoard: Comparable {
     static func < (lhs: ReusableBoard, rhs: ReusableBoard) -> Bool {
         return lhs.w < rhs.w
